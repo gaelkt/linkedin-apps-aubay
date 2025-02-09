@@ -1,0 +1,57 @@
+/* Conteneur principal du tableau */
+.data-table-container {
+    max-height: calc(100vh - 200px); /* Limiter la hauteur totale du tableau */
+    overflow-y: auto; /* Activer le défilement vertical si le contenu dépasse */
+    margin-top: 10px; /* Espacement entre le tableau et le composant précédent */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+  }
+  
+  /* Style du tableau */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow-x: auto; /* Défilement horizontal pour les grandes tables */
+  }
+  
+  thead th {
+    background-color: #f4f4f4;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  tbody td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .query{
+    width: 100%;
+   
+    
+  }
+
+  .query2{
+    background-color: #DCF8C6;
+    padding: "10px";
+    border-radius: 15px;
+    margin-bottom: "10px";
+    float: right;
+    
+    
+  }
+
+
+  .data{
+    width: 100%;
+   
+    
+  }
+

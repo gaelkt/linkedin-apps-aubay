@@ -1,0 +1,71 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Fixe la barre de menu en haut */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: white; /* Ajustez la couleur selon vos besoins */
+  z-index: 1000;
+  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px 0;
+}
+
+/* Permet au contenu de défiler sous la barre de menu */
+
+.content {
+  margin-top: 60px; /* Ajustez en fonction de la hauteur de votre menu */
+  height: calc(100vh - 60px); /* Empêche le débordement */
+  /*overflow: auto; *//* Permet le défilement uniquement dans la zone du contenu */
+
+  padding: 20px;
+}
+
+
+.nav-tabs {
+  margin-bottom: 10px;
+}
+
+
