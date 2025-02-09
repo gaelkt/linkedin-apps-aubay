@@ -1,4 +1,4 @@
-# AI Recruiter Assistant
+# AI Recruiter Assistant Backend
 
 ## Getting started
 
