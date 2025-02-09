@@ -1,0 +1,17 @@
+[Unit]
+Description=Lancement automatique de mes conteneurs avec Docker Compose
+Requires=docker.service
+After=docker.service
+
+[Service]
+# Indiquez le répertoire où se trouve votre fichier docker-compose.yml
+WorkingDirectory=/chemin/vers/votre/projet
+# Commande pour démarrer les conteneurs en arrière-plan
+ExecStart=/usr/local/bin/docker-compose up -d
+# Commande pour arrêter les conteneurs proprement
+ExecStop=/usr/local/bin/docker-compose down
+# Redémarrer le service en cas d'échec
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

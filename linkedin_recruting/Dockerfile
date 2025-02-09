@@ -13,15 +13,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && apt-get clean
 
-# Installer Ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
-
-# Ajouter Ollama au PATH
-ENV PATH="/root/.ollama/bin:$PATH"
-
-# Vérifier que Ollama est bien installé
-RUN ollama --version
-
 # Définir le répertoire de travail
 WORKDIR /app
 
@@ -32,11 +23,16 @@ COPY . /app
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Télécharger le modèle Phi4
-RUN ollama pull phi4
 
 # Configurer MySQL pour utiliser mysql_native_password pour l'utilisateur root
 RUN service mysql start && \
     sleep 10 && \
     mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';" && \
     mysql -u root -e "FLUSH PRIVILEGES;"
+
+
+EXPOSE 8081 3306
+
+CMD service mysql start && \
+    sleep 20 && \
+    /app/venv/bin/python3 main.py

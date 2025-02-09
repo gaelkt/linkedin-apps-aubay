@@ -69,12 +69,7 @@ function App() {
 
   const handleInitializeDB = async () => {
     try {
-      const response = await fetch('http://localhost:8000/initialization/', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
+      const response = await fetch('http://localhost:8081/initialization/');
 
       if (response.ok) {
         alert('Base de données initialisée avec succès!');
@@ -83,7 +78,7 @@ function App() {
       }
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue.');
+      alert(error);
     }
   };
   const handleJobUpload = (event) => {

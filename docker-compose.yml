@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  backend:
+    image: linkedin-backend
+    container_name: linkedin-backend
+    ports:
+      - "8081:8081"
+      - "3306:3306"
+    # Le volume permet de conserver les données MySQL même si le conteneur est recréé.
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - linkedin_network
+
+  frontend:
+    image: linkedin-frontend
+    container_name: linkedin-frontend
+    ports:
+      - "80:80"
+    networks:
+      - linkedin_network
+
+volumes:
+  mysql_data:
+
+networks:
+  linkedin_network:
