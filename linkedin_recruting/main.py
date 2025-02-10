@@ -24,7 +24,7 @@ from utils import langchain_agent, langchain_agent_sql
 from chunks import processJobs, processSingleJob
 from chunks import processApplication
 from mysql_functions import refreshDB, getJobs
-from mails import sendEmail
+from mails import sendEmail, sendEmailGeneral
 from libs import selectApplication, Task, setLLM
 from datetime import datetime
 from helper import generate_random_id
@@ -355,6 +355,11 @@ async def multipleApplications(files: List[UploadFile] = File(...)):
     new_message = "Finish" + '\n ' +  task.message
     task.message = new_message + '\n ' +  task.message
     task.save(status="finish", message=new_message)
+
+    email_message = "Finish processing applications"
+    recipient_email = "gkamdemdeteyou@aubay.com"
+    subject = "AI Recruiter assistant"
+    sendEmailGeneral(recipient_email, email_message, subject)
 
     return JSONResponse(content=content, status_code=200)
 

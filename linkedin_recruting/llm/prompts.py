@@ -147,105 +147,126 @@ def extractExperienceCandidat(context, llm):
     from langchain.prompts import ChatPromptTemplate
     logging.info("Calculating Candidate Diplome, Annee et Experience")
 
-    from templates import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
-
+    # from templates import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
+    from template_test2 import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
     start = time.time()
     #################################################
     #       Calcul du diplome et de l'annee
     #################################################
     # Json_structure and parse
-    json_structure_diplome_annee = {"diplome": '<diplome>', "annee": '<annee>'}
-    class DiplomeAnnee(BaseModel):
-        diplome: str = Field(description="diplome")
+
+
+    json_structure_annee = {"annee": "<annee>"}
+    class Annee(BaseModel):
         annee: str = Field(description="annee")
-    parser_diplome_annee = JsonOutputParser(pydantic_object=DiplomeAnnee)   
+    parser_annee = JsonOutputParser(pydantic_object=Annee) 
+
+    json_structure_experience = {"experience": "<votre_réponse>"}
+    class Experience(BaseModel):
+        experience: str = Field(description="experience")
+    parser_experience = JsonOutputParser(pydantic_object=Experience)
 
     # prompt
     logging.info("Prompt")
 
-    if llm_type == "gpt-4-turbo" or llm_type == "gpt-4" or llm_type == "openai":
-        prompt_diplome_annee = ChatPromptTemplate.from_template(template=prompt_template_diplome_annee_candidat)
-        logging.info("Defining chain")
-        chain_diplome_annee = (prompt_diplome_annee| llm| parser_diplome_annee)
-    
-    else:
-        prompt_diplome_annee = PromptTemplate(template=prompt_template_diplome_annee_candidat, input_variables=["context"], 
-        json_structure=json_structure_diplome_annee,
-        partial_variables={"format_instructions": parser_diplome_annee.get_format_instructions()})
+    prompt_annee_diplome = PromptTemplate(template=prompt_template_diplome_annee_candidat, input_variables=["context"], 
+        json_structure=json_structure_annee,
+        partial_variables={"format_instructions": parser_annee.get_format_instructions()})
 
-        # chain
-        logging.info("Defining chain")
-        chain_diplome_annee = prompt_diplome_annee | llm | parser_diplome_annee
+    prompt_1 = PromptTemplate(template=prompt_template_experience_candidat_1, input_variables=["context", "annee"], 
+        json_structure=json_structure_experience,
+        partial_variables={"format_instructions": parser_experience.get_format_instructions()})
+
+    prompt_2 = PromptTemplate(template=prompt_template_experience_candidat_2, input_variables=["context", "annee"], 
+        json_structure=json_structure_experience,
+        partial_variables={"format_instructions": parser_experience.get_format_instructions()})
 
     # Output
     logging.info("Running chain")
-    output_annee_diplome = chain_diplome_annee.invoke({"context": context})
+    chain_annee = prompt_annee_diplome | llm | parser_annee
+    chain_1 = prompt_1 | llm | parser_experience
+    chain_2 = prompt_2 | llm | parser_experience
+
+    logging.info("Getting the year")
+    output_annee = chain_annee.invoke({"context": context})
+    annee = output_annee["annee"]
 
     logging.info("")
-    logging.info(f"output_annee_diplome={output_annee_diplome}")
+    logging.info(f"output_annee={output_annee}")
 
-    diplome = output_annee_diplome['diplome']
-    annee = output_annee_diplome['annee']
-
-        
     if annee == "":
         logging.info("")
         logging.info("Impossible de trouver l'annee du dernier diplome ...")
         annee = "2016"
+
+    logging.info("Getting the experience 1")
+    output_1 = chain_1.invoke({"context": context, "annee": annee})
+    logging.info(f"output_1={output_1}")
+
+    logging.info("Getting the experience 2")
+    output_2 = chain_2.invoke({"context": context, "annee": annee})
+    logging.info(f"output_1={output_2}")
+
+    exp_1 = int(output_1["experience"])/12.0
+    exp_2 = int(output_2["experience"])/12.0
+
+    diplome = "Master"
+    experience = exp_1
+    
         
 
-    #################################################
-    #       Calcul de l'experience professionnelle
-    #################################################
+    # #################################################
+    # #       Calcul de l'experience professionnelle
+    # #################################################
 
-    # Json_structure and parse
-    class Experience(BaseModel):
-        experience: str = Field(description="experience requise du candidat")
-    parser_experience = JsonOutputParser(pydantic_object=Experience) 
+    # # Json_structure and parse
+    # class Experience(BaseModel):
+    #     experience: str = Field(description="experience requise du candidat")
+    # parser_experience = JsonOutputParser(pydantic_object=Experience) 
 
-    json_structure_experience = {"experience": "<votre_réponse>"}
+    # json_structure_experience = {"experience": "<votre_réponse>"}
 
-    # prompt
-    prompt_1 = PromptTemplate(template=prompt_template_experience_candidat_1, input_variables=["context"], 
-        json_structure=json_structure_experience,
-        partial_variables={"format_instructions": parser_experience.get_format_instructions()})
+    # # prompt
+    # prompt_1 = PromptTemplate(template=prompt_template_experience_candidat_1, input_variables=["context"], 
+    #     json_structure=json_structure_experience,
+    #     partial_variables={"format_instructions": parser_experience.get_format_instructions()})
 
-    prompt_2 = PromptTemplate(template=prompt_template_experience_candidat_2, input_variables=["context"], 
-        json_structure=json_structure_experience,
-        partial_variables={"format_instructions": parser_experience.get_format_instructions()})
+    # prompt_2 = PromptTemplate(template=prompt_template_experience_candidat_2, input_variables=["context"], 
+    #     json_structure=json_structure_experience,
+    #     partial_variables={"format_instructions": parser_experience.get_format_instructions()})
 
-    # chains
-    chain_1 = prompt_1 | llm | parser_experience
-    chain_2 = prompt_2 | llm | parser_experience
+    # # chains
+    # chain_1 = prompt_1 | llm | parser_experience
+    # chain_2 = prompt_2 | llm | parser_experience
 
-    # Outputs
-    output_experience_1 = chain_1.invoke({"context": context, "annee":annee})
-    logging.info("")
-    logging.info(f"output_experience_1={output_experience_1}")
-    # output_experience_2 = chain_2.invoke({"context": context, "annee":annee})
-    logging.info("")
-    # logging.info(f"output_experience_2={output_experience_2}")
+    # # Outputs
+    # output_experience_1 = chain_1.invoke({"context": context, "annee":annee})
+    # logging.info("")
+    # logging.info(f"output_experience_1={output_experience_1}")
+    # # output_experience_2 = chain_2.invoke({"context": context, "annee":annee})
+    # logging.info("")
+    # # logging.info(f"output_experience_2={output_experience_2}")
    
 
-    # Experience
-    experience_1 = int(output_experience_1["experience"])/12.0
-    # experience_2 = int(output_experience_2["experience"])/12.0
-    logging.info("")
-    # logging.info(f"experience_1={experience_1} and experience_1={experience_1}")
+    # # Experience
+    # experience_1 = int(output_experience_1["experience"])/12.0
+    # # experience_2 = int(output_experience_2["experience"])/12.0
+    # logging.info("")
+    # # logging.info(f"experience_1={experience_1} and experience_1={experience_1}")
 
-    # experience = np.round(np.mean([experience_2, experience_1]), 1)
-    experience = np.round(experience_1, 1)
+    # # experience = np.round(np.mean([experience_2, experience_1]), 1)
+    # experience = np.round(experience_1, 1)
 
 
-    end = time.time()
-    execution_time = end - start
-    logging.info(f"experience={experience} ans and time={round(execution_time/60)} seconds")
+    # end = time.time()
+    # execution_time = end - start
+    # logging.info(f"experience={experience} ans and time={round(execution_time/60)} seconds")
 
     return diplome, int(annee), experience
 
 def extractHardSkillsCandidat(context, llm):
 
-    logging.info("Calculating Candidate Certifications")
+    logging.info("Calculating Candidate Hard Skills")
 
     from templates import prompt_template_hard_skills_candidat
 
@@ -263,8 +284,16 @@ def extractHardSkillsCandidat(context, llm):
 
 
     chain = prompt | llm | parser_hard_skills
-
+    logging.info("Chain ok")
     output_hard_skills = chain.invoke({"context": context})
+    logging.info("Chain Invoked")
+
+    logging.info("")
+    logging.info("")
+    logging.info("Here are hard skills")
+    logging.info(f"{output_hard_skills}")
+    logging.info("Next")
+
 
     end = time.time()
     execution_time = end - start

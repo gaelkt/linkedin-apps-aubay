@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import smtplib
+import logging
 
 
 
@@ -107,3 +108,25 @@ def sendEmail(recipient_email, selection, topN=5):
 
     except Exception as e:
         raise Exception(f"Failed to send email: {str(e)}")
+
+
+def sendEmailGeneral(recipient_email, message, subject):
+
+    try:
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(message, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
+        raise Exception(e)

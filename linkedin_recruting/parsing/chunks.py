@@ -14,7 +14,7 @@ from langchain_community.document_loaders import PyMuPDFLoader
 
 from PyPDF2 import PdfReader
 
-from helper import generate_random_date
+from helper import generate_random_date, generate_random_id
 from datetime import datetime
 
 from libs import setLLM
@@ -274,7 +274,7 @@ def setRoleId(role):
         - Later we will use random generation
 
     '''
-
+    
     role_id = {"Tech Lead Data Engineering": "3kyBidhu",
             "Generative AI Engineer": "7hZ6glHq",
             "Consultant Data Power BI": "AIegN6My",
@@ -287,12 +287,20 @@ def setRoleId(role):
             "Consultant Data Qlik": "AS5fl5v0",
             "Consultant Data Integration – Informatica _ Talend": "pEumyRVP",
             "Consultant ETL IBM DataStage": "s4YIUtdV",
-            "Data Solutions Architect": "KgY8qMd4"}
+            "Data Solutions Architect": "KgY8qMd4",
+            "Analytics Engineer": "0q7xgtZl",
+            "Product Owner Data": "qwerty0"}
 
 
-    return role_id[role]
+    if role in role_id:
+        logging.info(f"role {role} already have a roleId which is {role_id[role]}")
+        return role_id[role]
 
-
+    else:
+        logging.info(f"{role} does not have a roleId yet. We generate a new one")
+        roleId = generate_random_id
+        logging.info(f"The generated roleId is {roleId}")
+        return roleId
 
 
 def processApplication(msg_file_path, task, llm):
@@ -358,15 +366,27 @@ def processApplication(msg_file_path, task, llm):
         #                       collection_name = "fourted")
         logging.info("Data saved to vector store")
 
+        # Extracting diplome
+        logging.info("")
+        logging.info("Extracting diplome ...")
+        diplome = extractDiplomeCandidat(text, llm=llm)
+        logging.info(f"diplome={diplome}")
+        application.diplome = diplome
 
-        application.diplome, application.annee_diplome, application.experience = extractExperienceCandidat(resume_data, llm=llm)
+        # Extracting experience
+        logging.info("")
+        logging.info("Extracting experience ...")
+        _, application.annee_diplome, application.experience = extractExperienceCandidat(text, llm=llm)
         logging.info(f"Candidate diplome={application.diplome} Candidate graduation={application.annee_diplome} Candidate experience={application.experience} .")
 
-        # application.hard_skills = extractHardSkillsCandidat(resume_data, llm=llm)
-        # logging.info(f"Candidate hard skills={application.hard_skills} .")
-        application.hard_skills = "NONE"
+         # Extracting experience
+        logging.info("")
+        logging.info("Extracting hard skills ...")
+        application.hard_skills = extractHardSkillsCandidat(text, llm=llm)
+        logging.info(f"Candidate hard skills={application.hard_skills} .")
+        
 
-        # application.certifications = extractCertificationsCandidat(resume_data, llm=llm)
+        # application.certifications = extractCertificationsCandidat(text, llm=llm)
         # logging.info(f"Candidate certifications={application.certifications} .")
         application.certifications = "NONE"
 

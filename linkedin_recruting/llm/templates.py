@@ -78,6 +78,7 @@ prompt_template_experience_requise = """
 
     """ 
 
+
 prompt_template_hard_skills_requis = """
     
     Tu es un assistant intelligent spécialisé en recrutement. Ta mission est de determiner les compétences techniques requises pour un poste donné en renvoyant un objet JSON contenant uniquement la clé "hard_skills", et dont la valeur est une liste de compétences.
@@ -90,16 +91,7 @@ prompt_template_hard_skills_requis = """
 
     S'il y a plus de 10 compétences, donner les 10 plus importantes au vu du poste
 
-    Exemples de contexte et de réponses attendues :
-
-    Exemple 1
-    Contexte : "Les plus de votre profil qui vous feront sortir du lot : Vous avez validé vos acquis en ayant obtenu des certifications reconnues dans le domaine du Machine Learning et de l’IA, telles que TensorFlow Developer Certificate, AWS Certified Machine Learning – Specialty, ou Google Professional Machine Learning Engineer. Vous avez une connaissance approfondie des enjeux liés à la gestion des données et des modèles, notamment en termes de gouvernance, de qualité et de conformité (ex : RGPD, éthique de l’IA, etc.). Vous maîtrisez les concepts de Machine Learning, de Deep Learning et de MLOps, ainsi que les outils et frameworks associés tels que TensorFlow, PyTorch, Scikit-learn, MLflow, Kubeflow, et Databricks. Vous savez concevoir, déployer et maintenir des pipelines de données et des modèles ML, en utilisant des technologies comme Apache Spark, Hadoop, Kafka, et des services Cloud tels que Azure Machine Learning, AWS SageMaker, ou Go"
-    Réponse : {{"hard_skills": ['TensorFlow Developer Certificate', 'AWS Certified Machine Learning - Speciality', 'Google Professional Machine Learning Engineer', 'Machine Learning', 'Deep Learning', 'Tensorflow', 'Pytorch', 'Scikit-Learn', 'MLflow', 'Kubeflow', 'Databricks', 'Apache Spark', 'Hadoop', 'Kafka', 'Azure Machine Learning', 'AWS SageMaker' ]}}
-    
-    Exemple 1
-    Contexte : "ASIC Engineer (H/F). Vous êtes passionné(e) par la conception de circuits intégrés et souhaitez évoluer dans un environnement technologique de pointe ? Rejoignez notre équipe et participez à la conception et à la mise en œuvre de solutions ASIC innovantes pour des applications de haute performance. Vos missions: Concevoir et développer des circuits ASIC en respectant les spécifications fonctionnelles et les contraintes de puissance, de performance et d’aire (PPA). Implémenter et optimiser des architectures RTL en utilisant des langages de description matériel tels que VHDL et Verilog/SystemVerilog. Les plus de votre profil qui vous feront sortir du lot: Une maîtrise des outils et méthodologies de Physical Design (place & route, DRC, LVS) sous Cadence Innovus ou Synopsys IC Compiler, Une expérience en FPGA prototyping (Xilinx, Intel) et en validation sur cible. Une connaissance approfondie des bus d’interconnexion tels que AXI, PCIe, DDR."
-    Réponse : {{"hard_skills":  ['PPA', 'RTL ', 'VHDL ', 'Verilog', 'SystemVerilog', 'Physical Design', 'place & route', 'DRC', 'GNS3', 'LVS', 'FPGA prototyping', 'AXI', 'PCIe' ]}}
-
+   
     {format_instructions}
     Context: {context}
 
@@ -111,6 +103,40 @@ prompt_template_hard_skills_requis = """
 
 
     """ 
+
+# prompt_template_hard_skills_requis = """
+    
+#     Tu es un assistant intelligent spécialisé en recrutement. Ta mission est de determiner les compétences techniques requises pour un poste donné en renvoyant un objet JSON contenant uniquement la clé "hard_skills", et dont la valeur est une liste de compétences.
+    
+
+#     Instructions :
+#     En te basant uniquement sur les informations disponibles dans le contexte, détermine le determiner toutes les compétences techniques requises pour le poste. 
+    
+#     Ne pas fournir d'explications ou d'autres textes supplémentaires. Donner uniquement une liste de  compétences mentionnées dans le contexte.
+
+#     S'il y a plus de 10 compétences, donner les 10 plus importantes au vu du poste
+
+#     Exemples de contexte et de réponses attendues :
+
+#     Exemple 1
+#     Contexte : "Les plus de votre profil qui vous feront sortir du lot : Vous avez validé vos acquis en ayant obtenu des certifications reconnues dans le domaine du Machine Learning et de l’IA, telles que TensorFlow Developer Certificate, AWS Certified Machine Learning – Specialty, ou Google Professional Machine Learning Engineer. Vous avez une connaissance approfondie des enjeux liés à la gestion des données et des modèles, notamment en termes de gouvernance, de qualité et de conformité (ex : RGPD, éthique de l’IA, etc.). Vous maîtrisez les concepts de Machine Learning, de Deep Learning et de MLOps, ainsi que les outils et frameworks associés tels que TensorFlow, PyTorch, Scikit-learn, MLflow, Kubeflow, et Databricks. Vous savez concevoir, déployer et maintenir des pipelines de données et des modèles ML, en utilisant des technologies comme Apache Spark, Hadoop, Kafka, et des services Cloud tels que Azure Machine Learning, AWS SageMaker, ou Go"
+#     Réponse : {{"hard_skills": ['TensorFlow Developer Certificate', 'AWS Certified Machine Learning - Speciality', 'Google Professional Machine Learning Engineer', 'Machine Learning', 'Deep Learning', 'Tensorflow', 'Pytorch', 'Scikit-Learn', 'MLflow', 'Kubeflow', 'Databricks', 'Apache Spark', 'Hadoop', 'Kafka', 'Azure Machine Learning', 'AWS SageMaker' ]}}
+    
+#     Exemple 1
+#     Contexte : "ASIC Engineer (H/F). Vous êtes passionné(e) par la conception de circuits intégrés et souhaitez évoluer dans un environnement technologique de pointe ? Rejoignez notre équipe et participez à la conception et à la mise en œuvre de solutions ASIC innovantes pour des applications de haute performance. Vos missions: Concevoir et développer des circuits ASIC en respectant les spécifications fonctionnelles et les contraintes de puissance, de performance et d’aire (PPA). Implémenter et optimiser des architectures RTL en utilisant des langages de description matériel tels que VHDL et Verilog/SystemVerilog. Les plus de votre profil qui vous feront sortir du lot: Une maîtrise des outils et méthodologies de Physical Design (place & route, DRC, LVS) sous Cadence Innovus ou Synopsys IC Compiler, Une expérience en FPGA prototyping (Xilinx, Intel) et en validation sur cible. Une connaissance approfondie des bus d’interconnexion tels que AXI, PCIe, DDR."
+#     Réponse : {{"hard_skills":  ['PPA', 'RTL ', 'VHDL ', 'Verilog', 'SystemVerilog', 'Physical Design', 'place & route', 'DRC', 'GNS3', 'LVS', 'FPGA prototyping', 'AXI', 'PCIe' ]}}
+
+#     {format_instructions}
+#     Context: {context}
+
+                       
+#     Ta réponse doit obligatoirement être au format JSON ci-apres contenant uniquement la clé "hard_skills" :
+#     {{"hard_skills": "<liste_competence>"}}
+    
+#     Ne pas  fournir d'explications ou d'autres commentaires supplémentaires
+
+
+#     """ 
 
 
 prompt_template_certifications_requises = """
@@ -126,11 +152,8 @@ prompt_template_certifications_requises = """
     {format_instructions}
     Context: {context}
 
-    
-    Exemples de réponses attendues :
-
                          
-    Ta réponse doit obligatoirement être au format JSON ci-apres contenant uniquement la clé "hard_skills" :
+    Ta réponse doit obligatoirement être au format JSON ci-apres contenant uniquement la clé "certifications" :
     {{"certifications": "<liste_certifications>"}}
     
     Ne pas  fournir d'explications ou d'autres commentaires supplémentaires
@@ -257,42 +280,42 @@ prompt_template_experience_candidat_2 = """
 
 
 
-# prompt_template_diplome_candidat = """
-#     Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni ci-dessous dans le contexte, ta mission est de determiner le diplome le plus élévé du candidat. 
+prompt_template_diplome_candidat = """
+    Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni ci-dessous dans le contexte, ta mission est de determiner le diplome le plus élévé du candidat. 
     
-#     Renvois uniquement un objet JSON contenant la clé "diplome" et comme valeur le diplome le plus élévé du candidat.
+    Renvois uniquement un objet JSON contenant la clé "diplome" et comme valeur le diplome le plus élévé du candidat.
 
-#     {format_instructions}
+    {format_instructions}
 
-#     Context: {context}
+    Context: {context}
 
-#     ### Instructions :
+    ### Instructions :
 
-#     1. Determiner la liste des diplomes du candidat
+    1. Determiner la liste des diplomes du candidat
 
-#     2. Identifier le diplome le plus élévé
+    2. Identifier le diplome le plus élévé
 
-#     3. Trouver l'equivalent du diplome le plus élévé
-#      - Si c'est un Master 1, Master 2,  un diplome d’ingénieur ou un Bac+5 alors retourner "Master" comme valeur
-#      - Si c'est un Bachelor, une License, un L3 alors retourner "License" comme valeur
-#      - Si c'est un PhD, un doctorat alors retourner "Doctorat" comme valeur
-#      - Si c'est un Baccalaureat, retourner "Baccalaureat" comme valeur
-#      - Sinon retourner "High School"
+    3. Trouver l'equivalent du diplome le plus élévé
+     - Si c'est un Master 1, Master 2,  un diplome d’ingénieur ou un Bac+5 alors retourner "Master" comme valeur
+     - Si c'est un Bachelor, une License, un L3 alors retourner "License" comme valeur
+     - Si c'est un PhD, un doctorat alors retourner "Doctorat" comme valeur
+     - Si c'est un Baccalaureat, retourner "Baccalaureat" comme valeur
+     - Sinon retourner "High School"
 
-#      4. Vérification
-#      - Est-ce bien le diplome le plus eleve que vous avez selectionne 
-#      - Sa valeur est-elle bien dans la liste ["Doctorat", "Master", "License", "High School"]
+     4. Vérification
+     - Est-ce bien le diplome le plus eleve que vous avez selectionne 
+     - Sa valeur est-elle bien dans la liste ["Doctorat", "Master", "License", "High School"]
      
 
-#     Ne pas fournir d'explications ou d'autres textes supplémentaires
+    Ne pas fournir d'explications ou d'autres textes supplémentaires
     
-#     Ta réponse doit obligatoirement être au format JSON contenant uniquement la clé "diplome" et comme valeur, la valeur correspondante du diplome dans la liste ["Doctorat", "Master", "License", "High School"]
+    Ta réponse doit obligatoirement être au format JSON contenant uniquement la clé "diplome" et comme valeur, la valeur correspondante du diplome dans la liste ["Doctorat", "Master", "License", "High School"]
     
-#     Voici le format de la reponse
-#     {{"diplome": "<votre_diplome>"}}
+    Voici le format de la reponse
+    {{"diplome": "<votre_diplome>"}}
            
 
-#     """
+    """
 
 prompt_template_diplome_annee_candidat = """
 Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni dans le contexte ci-dessous, ta mission est d'identifier le diplôme le plus élevé obtenu par le candidat ainsi que l'année d'obtention de ce diplôme.
@@ -331,57 +354,57 @@ Respecte strictement ces consignes et ne fournis aucun contenu supplémentaire.
 """
 
 
-prompt_template_hard_skills_candidat = """
-Tu es un expert en extraction d'informations depuis des CV. Ta mission est d'extraire, à partir du contexte fourni (contenant le CV du candidat), toutes les hard skills (compétences techniques) explicitement mentionnées.
-
-{format_instructions}
-Context: {context}
-
-**Consignes** :
-- Ne considère que les compétences techniques qui apparaissent textuellement dans le contexte.
-- Les hard skills doivent être courtes et succinctes (éviter les longues expressions).
-- Limite la réponse à un maximum de 10 hard skills. En cas d'absence de compétences, renvoie une liste vide.
-- Ta réponse doit être uniquement au format JSON, sans explications ni commentaires supplémentaires.
-
-**Format de la réponse :**
-Utilise exactement le format JSON suivant :
-{{"hard_skills": [<liste_des_hard_skills>]}}
-
-
-"""
-
-
-
-
-
-
-
 # prompt_template_hard_skills_candidat = """
-#     En tant qu'assistant de recrutement utile, en te basant uniquement sur les informations fournies dans le contexte
+# Tu es un expert en extraction d'informations depuis des CV. Ta mission est d'extraire, à partir du contexte fourni (contenant le CV du candidat), toutes les hard skills (compétences techniques) explicitement mentionnées.
+
+# {format_instructions}
+# Context: {context}
+
+# **Consignes** :
+# - Ne considère que les compétences techniques qui apparaissent textuellement dans le contexte.
+# - Les hard skills doivent être courtes et succinctes (éviter les longues expressions).
+# - Limite la réponse à un maximum de 10 hard skills. En cas d'absence de compétences, renvoie une liste vide.
+# - Ta réponse doit être uniquement au format JSON, sans explications ni commentaires supplémentaires.
+
+# **Format de la réponse :**
+# Utilise exactement le format JSON suivant :
+# {{"hard_skills": [<liste_des_hard_skills>]}}
+
+
+# """
+
+
+
+
+
+
+
+prompt_template_hard_skills_candidat = """
+    En tant qu'assistant de recrutement utile, en te basant uniquement sur les informations fournies dans le contexte
     
-#     Donnez les hard skills ou competences techniques explicitement mentionnées qui sont dans le profil du candidat.
+    Donnez les hard skills ou competences techniques explicitement mentionnées qui sont dans le profil du candidat.
     
-#     Les hard skills ou competences techniques doivent etre courts, succint et absolument etre explicitement metionnées dans le contexte.
+    Les hard skills ou competences techniques doivent etre courts, succint et absolument etre explicitement metionnées dans le contexte.
     
-#     Pas de longue expressions dans les hard skills
+    Pas de longue expressions dans les hard skills
     
-#     Donnez une reponse sous forme de JSON.
+    Donnez une reponse sous forme de JSON.
     
-#     Utilisez les clefs suivantes pour le JSON:
+    Utilisez les clefs suivantes pour le JSON:
         
-#         - "hard_skills": Liste de hard skills ou competences techniques explicitement mentionnées pour le profil. Donner au plus 8 hard skills. 
+        - "hard_skills": Liste de hard skills ou competences techniques explicitement mentionnées pour le profil. Donner au plus 8 hard skills. 
         
         
-#     {format_instructions}
+    {format_instructions}
 
-#     Context: {context}
+    Context: {context}
 
-#      Ta réponse doit obligatoirement être au format JSON ci-apres contenant uniquement la clé "hard_skills" :
-#     {{"hard_skills": "<votre_réponse>"}}
+     Ta réponse doit obligatoirement être au format JSON ci-apres contenant uniquement la clé "hard_skills" :
+    {{"hard_skills": "<votre_réponse>"}}
 
-#     Ne pas  fournir d'explications ou d'autres commentaires supplémentaires
+    Ne pas  fournir d'explications ou d'autres commentaires supplémentaires
 
-#     """
+    """
 
 # prompt_template_certifications_candidat = """
 #     En tant qu'assistant de recrutement utile, en te basant uniquement sur les informations fournies dans le contexte
