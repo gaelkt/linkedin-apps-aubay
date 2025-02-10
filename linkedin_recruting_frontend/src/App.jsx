@@ -28,7 +28,7 @@ function App() {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await fetch('http://localhost:8081/view_jobs/');
+        const response = await fetch('http://192.168.71.120:8081/view_jobs/');
         if (response.ok) {
           const data = await response.json();
           const roles = Object.values(data).map((item) => item.role);
@@ -44,7 +44,7 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-        const response = await fetch('http://localhost:8081/view_jobs/');
+        const response = await fetch('http://192.168.71.120:8081/view_jobs/');
         if (response.ok) {
           const data = await response.json();
           const jobsList = Object.values(data).map((item) => ({
@@ -69,7 +69,7 @@ function App() {
 
   const handleInitializeDB = async () => {
     try {
-      const response = await fetch('http://localhost:8081/initialization/');
+      const response = await fetch('http://192.168.71.120:8081/initialization/');
 
       if (response.ok) {
         alert('Base de données initialisée avec succès!');
@@ -111,7 +111,7 @@ function App() {
     try {
 
       setLoadingApps(true);
-      const response = await fetch("http://localhost:8081/applications/", {
+      const response = await fetch("http://192.168.71.120:8081/applications/", {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
@@ -158,7 +158,7 @@ function App() {
   
     try {
       setLoadingJobs(true);
-      const response = await fetch("http://localhost:8081/jobs/", {
+      const response = await fetch("http://192.168.71.120:8081/jobs/", {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
@@ -193,7 +193,7 @@ function App() {
 
   const handleFilter = async () => {
     try {
-      const url = `http://localhost:8081/view_applications/?begin_date=${startDate}&end_date=${endDate}&roles=${encodeURIComponent(role)}`;
+      const url = `http://192.168.71.120:8081/view_applications/?begin_date=${startDate}&end_date=${endDate}&roles=${encodeURIComponent(role)}`;
       const response = await fetch(url);
 
       if (response.ok) {
@@ -227,7 +227,7 @@ function App() {
       return;
     }
 
-    const url = `http://localhost:8081/report?begin_date=${startDate}&end_date=${endDate}&recipient_email=${email}${selectedRoles.map(role => `&roles=${encodeURIComponent(role)}`).join('')}`;
+    const url = `http://192.168.71.120:8081/report?begin_date=${startDate}&end_date=${endDate}&recipient_email=${email}${selectedRoles.map(role => `&roles=${encodeURIComponent(role)}`).join('')}`;
 
     try {
       const response = await fetch(url);
@@ -426,7 +426,7 @@ function App() {
 
               {filteredData.map((item, index) => {
       // Transformer "media/pdf_job/Consultant Data Management.pdf" en URL correcte
-      const downloadUrl = `http://localhost:8081/download/resume/${encodeURIComponent(item.path.split("/").pop())}`;
+      const downloadUrl = `http://192.168.71.120:8081/download/resume/${encodeURIComponent(item.path.split("/").pop())}`;
 
       return (
         <tr key={index}>
@@ -470,7 +470,7 @@ function App() {
   <tbody>
     {jobs.map((job, index) => {
       // Transformer "media/pdf_job/Consultant Data Management.pdf" en URL correcte
-      const downloadUrl = `http://localhost:8081/download/pdf_job/${encodeURIComponent(job.path.split("/").pop())}`;
+      const downloadUrl = `http://192.168.71.120:8081/download/pdf_job/${encodeURIComponent(job.path.split("/").pop())}`;
 
       return (
         <tr key={index}>
