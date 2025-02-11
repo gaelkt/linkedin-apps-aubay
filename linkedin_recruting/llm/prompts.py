@@ -43,6 +43,8 @@ def extractDiplomeRequired(context, llm):
 def extractExperienceRequired(context, llm):
 
     from templates import prompt_template_experience_requise
+
+    logging.info("Defining class...")
     
     class Experience(BaseModel):
         experience: str = Field(description="experience")
@@ -51,12 +53,15 @@ def extractExperienceRequired(context, llm):
     json_structure_experience = {
         "experience": "<votre_réponse>"
         }
+    logging.info("Defining prompt...")
     prompt = PromptTemplate(template=prompt_template_experience_requise, input_variables=["context"], 
         json_structure=json_structure_experience,
         partial_variables={"format_instructions": parser_experience.get_format_instructions()})
 
+    logging.info("Defining chain...")
     chain = prompt | llm | parser_experience
 
+    logging.info("Involing chain...")
     output_experience = chain.invoke({"context": context})
 
     return output_experience["experience"]
