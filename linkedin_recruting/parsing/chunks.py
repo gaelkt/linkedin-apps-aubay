@@ -329,42 +329,24 @@ def processApplication(msg_file_path, task, llm):
 
         # We check if the candidate is already in the database
         if application.isApplicationOld:
-            logging.info(f"{application.name} has already applied to {application.role} position.")
+            logging.info("")
+            logging.info("")
+            logging.info(f"Candidate {application.name} has already applied to {application.role} position.")
+            logging.info("")
             return None
 
 
-        # Extract chunk from pdf file
-        #**********************************************************
-        #**********************************************************
-        #**********************************************************
-        #                  Abdelaziz Jaddi va remplacer cette function
-
-        chunk_resume = getChunk(application.pathResume)
-        resume_data = chunk_resume[0].page_content
-        logging.info("")
-        logging.info(f"{len(chunk_resume)} chunks generated for name={application.name} role={application.role}.")
-        logging.info("")
-
-        # Saving data to vector store
         laparams = LAParams(line_overlap=0.5, detect_vertical=True, all_texts=True)
         text = extract_text(application.pathResume, laparams=laparams)
+        logging.info("")
+        logging.info("Content extracted from resume")
+        logging.info("")
 
         if len(text) <=2:
             logging.info("")
             logging.info("")
             logging.info(f"Error in function processApplication. Unable to extract data from the resume of {application.name}. Check the pdf resume of the applicant")
             raise Exception(f"Error in function processApplication. Unable to extract data from the resume of {application.name}. Check the pdf resume of the applicant")
-
-        second_chunk_resume=chunk_resume
-        second_chunk_resume[0].page_content = text
-        logging.info("Content filled with fitz")
-
-        # Qdrant.from_documents(second_chunk_resume,
-        #                       OpenAIEmbeddings(),
-        #                       url=os.environ['qdrant_url'],
-        #                       api_key = os.environ['qdrant_key'], 
-        #                       collection_name = "fourted")
-        logging.info("Data saved to vector store")
 
         # Extracting diplome
         logging.info("")
@@ -376,7 +358,7 @@ def processApplication(msg_file_path, task, llm):
         # Extracting experience
         logging.info("")
         logging.info("Extracting experience ...")
-        _, application.annee_diplome, application.experience = extractExperienceCandidat(text, llm=llm)
+        application.annee_diplome, application.experience = extractExperienceCandidat(text, llm=llm)
         logging.info(f"Candidate diplome={application.diplome} Candidate graduation={application.annee_diplome} Candidate experience={application.experience} .")
 
          # Extracting experience

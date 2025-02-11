@@ -172,7 +172,7 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 # Endpoint used to process multiple job and store its requirements in the database
 # Jobs are sent via a POST request
 @app.post("/jobs/")
-async def multipleJobs(files: List[UploadFile] = File(...)):
+async def multipleJobs(files: List[UploadFile] = File(...), llm_type: str = os.environ['LLM_TYPE']):
 
 
     # Checking validity of files
@@ -259,7 +259,7 @@ async def multipleJobs(files: List[UploadFile] = File(...)):
 # Endpoint used to process multiple applications and store their qualifications in the database
 # Applications files are sent via a POST request
 @app.post("/applications/")
-async def multipleApplications(files: List[UploadFile] = File(...)):
+async def multipleApplications(files: List[UploadFile] = File(...), llm_type: str = os.environ['LLM_TYPE']):
 
     # Checking validity of files
     validity=True
@@ -286,6 +286,8 @@ async def multipleApplications(files: List[UploadFile] = File(...)):
 
     logging.info("")
     logging.info("")
+    logging.info("")
+    logging.info("")
 
     # Generating a new task
     task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="multiple applications", 
@@ -303,6 +305,8 @@ async def multipleApplications(files: List[UploadFile] = File(...)):
 
     # We set the llm to use
     llm = setLLM(llm_type=llm_type)
+    logging.info("")
+    logging.info("")
     logging.info(f"Using {llm_type} as LLM")
     logging.info("")
     logging.info("")
@@ -323,6 +327,8 @@ async def multipleApplications(files: List[UploadFile] = File(...)):
         logging.info("")
 
         logging.info(f"Processing application {count}/{number_applications}")
+        logging.info("")
+        logging.info("")
         logging.info("")
 
         # msg_file_path = email_folder + '/' + email_file

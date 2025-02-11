@@ -13,6 +13,7 @@ import time
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 import numpy as np
+from datetime import datetime
 
 load_dotenv()
 llm_type=os.environ['LLM_TYPE']
@@ -150,10 +151,7 @@ def extractExperienceCandidat(context, llm):
     # from templates import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
     from template_test2 import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
     start = time.time()
-    #################################################
-    #       Calcul du diplome et de l'annee
-    #################################################
-    # Json_structure and parse
+
 
 
     json_structure_annee = {"annee": "<annee>"}
@@ -200,20 +198,63 @@ def extractExperienceCandidat(context, llm):
         annee = "2016"
 
     logging.info("Getting the experience 1")
-    output_1 = chain_1.invoke({"context": context, "annee": annee})
-    logging.info(f"output_1={output_1}")
 
-    logging.info("Getting the experience 2")
-    output_2 = chain_2.invoke({"context": context, "annee": annee})
-    logging.info(f"output_1={output_2}")
-
-    exp_1 = int(output_1["experience"])/12.0
-    exp_2 = int(output_2["experience"])/12.0
-
-    diplome = "Master"
-    experience = exp_1
+    exp_1_ok = False
+    exp_2_ok = False
+    try:
+        logging.info("")
+        output_1 = chain_1.invoke({"context": context, "annee": annee})
+        logging.info(f"output_1={output_1}")
+        exp_1 = int(output_1["experience"])/12.0
+        exp_1_ok = True
+        logging.info("")
+        logging.info("")
     
+    except Exception as e:
+        logging.info("")
+        logging.info("Unable to calculate the experience 1")
+        logging.info("We will try another prompt")
+        logging.error(e)
+        logging.info("")
+        logging.info("")
+        logging.info("")
+
+    try:
+        logging.info("")
+        logging.info("Getting the experience 2")
+        output_2 = chain_2.invoke({"context": context, "annee": annee})
+        logging.info(f"output_1={output_2}")
+        exp_2 = int(output_2["experience"])/12.0
+        exp_2_ok = True
+    except Exception as e:
+        logging.info("")
+        logging.info("Unable to calculate the experience 2")
+        logging.error(e)
+        logging.info("")
+        logging.info("")
+        logging.info("")
+
+    if (exp_1_ok and exp_2_ok):
+        experience = 0.5*(exp_1 + exp_2)
+
+    elif exp_1_ok:
+        experience = exp_1
+    
+    elif exp_2_ok:
+        experience = exp_2
+    
+    else:
+        logging.info("")
+        logging.info("We go by the year of degree since methods 1 and 2 failed")
+        experience = current_year = datetime.now().year-annee-1
+        logging.info(f"experience by degree year is ={experience}")
+        logging.info("")
+        logging.info("")
         
+
+    
+    logging.info(f"Final experience={experience}")
+    
 
     # #################################################
     # #       Calcul de l'experience professionnelle
@@ -262,7 +303,7 @@ def extractExperienceCandidat(context, llm):
     # execution_time = end - start
     # logging.info(f"experience={experience} ans and time={round(execution_time/60)} seconds")
 
-    return diplome, int(annee), experience
+    return int(annee), experience
 
 def extractHardSkillsCandidat(context, llm):
 
