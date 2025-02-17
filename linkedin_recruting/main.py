@@ -2,13 +2,14 @@ from dotenv import load_dotenv
 import sys
 import os
 import openai 
-from fastapi import FastAPI, Query
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, Query, File, UploadFile
 from typing import List
 import uvicorn
 from urllib.parse import unquote
 
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi import HTTPException
+
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,10 +22,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
 from utils import langchain_agent, langchain_agent_sql
 
-from chunks import processJobs, processSingleJob
-from chunks import processApplication
+from chunks import processJobs
+from chunks import processMultipleApplications
 from mysql_functions import refreshDB, getJobs
-from mails import sendEmail, sendEmailGeneral
+from mails import sendEmail
 from libs import selectApplication, Task, setLLM
 from datetime import datetime
 from helper import generate_random_id
@@ -33,7 +34,6 @@ from langserve import add_routes
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
-from typing import Optional
 
 import logging
 import sys
@@ -46,30 +46,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logging.info("Jesus Christ is my Savior")
 
 
-#------------------
 
-# logging = logging.getLogger("my_logging")
-# logging.setLevel(logging.INFO)
-
-# # Create handlers
-# console_handler = logging.StreamHandler()  # Logs to the console
-# file_handler = logging.FileHandler("app.log")  # Logs to a file
-
-# # Set log levels for handlers
-# console_handler.setLevel(logging.INFO)
-# file_handler.setLevel(logging.ERROR)  # Only logs errors to the file
-
-# # Create formatters
-# console_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-# file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-# # Assign formatters to handlers
-# console_handler.setFormatter(console_format)
-# file_handler.setFormatter(file_format)
-
-# # Add handlers to the logging
-# logging.addHandler(console_handler)
-# logging.addHandler(file_handler)
 
 load_dotenv()
 openai.api_key = os.environ['OPENAI_API_KEY']
@@ -172,7 +149,9 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 # Endpoint used to process multiple job and store its requirements in the database
 # Jobs are sent via a POST request
 @app.post("/jobs/")
-async def multipleJobs(files: List[UploadFile] = File(...), llm_type: str = os.environ['LLM_TYPE']):
+async def multipleJobs(files: List[UploadFile] = File(...), 
+                       recipient_email: str = "gkamdemdeteyou@aubay.com",
+                       llm_type: str = os.environ['LLM_TYPE']):
 
 
     # Checking validity of files
@@ -182,74 +161,20 @@ async def multipleJobs(files: List[UploadFile] = File(...), llm_type: str = os.e
         if not file.filename.endswith(".pdf"):
             invalid_files.append(file)
             validity = False
+            
+    # At least one file is invalid
     if validity==False:
         logging.info(f"file {invalid_files} are not valid pdf files. Please choose files with format .pdf")
         content = {"message": f"files {invalid_files} are not valid pdf files. Please choose files with format .pdf"}
         return JSONResponse(content=content, status_code=400)
+    
+    # All job descs are valid
+    # Function processJobs is run asynchronously
+    logging.info("Processing jobs...")
+    await processJobs(files=files, recipient_email=recipient_email, llm_type = llm_type)
 
-    # The files are valid
-    logging.info("")
-    logging.info("")
+    content = {"message": f"Processing {len(files)} job descs"}
 
-    # Counting application
-    count = 0
-    number_jobs = len(files)
-    logging.info(f"There are {number_jobs} jobs")
-
-
-    success, failed = 0, 0
-    job_failed = []
-    errors = []
-
-    # We set the llm to use
-    llm = setLLM(llm_type=llm_type)
-    logging.info(f"Using {llm_type} as LLM")
-    logging.info("")
-    logging.info("")
-
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
-            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-            message="Started processing a single job")
-
-    logging.info(f"TaskId = {task.Id}")
-
-   # We process applications one by one
-  
-    for file in files:
-        try:
-            input_pdf_file = f"media/pdf_job/{file.filename}"
-            with open(input_pdf_file, "wb") as f:
-                f.write(await file.read())
-
-
-            count += 1
-
-            logging.info("")
-            logging.info("")
-            logging.info("")
-
-            logging.info(f"Processing application {count}/{number_jobs}")
-            logging.info("")
-            logging.info(f"input_pdf_file={input_pdf_file}")
-            job = processSingleJob(input_pdf_file, task=task, llm=llm)
-
-            # Updating task with success
-            task.save(status="running", message=f"Job {job.role} has been successfully")
-            success += 1
-
- 
-        except Exception as e:
-            logging.info(f"We have an error with file. Error={file}")
-            logging.info(f"The Error is {e}")
-            job_failed.append(file)
-            errors.append(e)
-            failed += 1
- 
-    content = {"message": f"Processed {number_jobs} jobs",
-                "number of success": success,
-                "number of failed": failed,
-                "jobs failed": job_failed,
-                "errors": errors}
     return JSONResponse(content=content, status_code=200)
 
 
@@ -259,7 +184,9 @@ async def multipleJobs(files: List[UploadFile] = File(...), llm_type: str = os.e
 # Endpoint used to process multiple applications and store their qualifications in the database
 # Applications files are sent via a POST request
 @app.post("/applications/")
-async def multipleApplications(files: List[UploadFile] = File(...), llm_type: str = os.environ['LLM_TYPE']):
+async def multipleApplications(files: List[UploadFile] = File(...), 
+        recipient_email: str = "gkamdemdeteyou@aubay.com",
+        llm_type: str = os.environ['LLM_TYPE']):
 
     # Checking validity of files
     validity=True
@@ -268,104 +195,18 @@ async def multipleApplications(files: List[UploadFile] = File(...), llm_type: st
         if not file.filename.endswith(".msg"):
             invalid_files.append(file)
             validity = False
+            
+    # At least one application is invalid
     if validity==False:
         logging.info(f"file {invalid_files} are not valid email message files. Please choose files with format .msg")
         content = {"message": f"files {invalid_files} are not valid email message files. Please choose files with format .msg"}
         return JSONResponse(content=content, status_code=400)
 
-    # Files are valid email files
+    # All the files are valid
+    content = {"message": f"Processing {len(files)} applications"}
 
-    # Number of applications
-    number_applications = len(files)
-
-    logging.info("")
-    logging.info("")
-    logging.info("")
-
-    logging.info(f"Processing {number_applications} applications ...")
-
-    logging.info("")
-    logging.info("")
-    logging.info("")
-    logging.info("")
-
-    # Generating a new task
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="multiple applications", 
-        date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-        message="Started processing multiple candidate applications")
-
-    logging.info(f"TaskId = {task.Id}")
-
-
-    count = 0
-    is_application_already_in_database=0
-    is_application_new_in_database = 0
-    failed = 0
-    failed_list = []
-
-    # We set the llm to use
-    llm = setLLM(llm_type=llm_type)
-    logging.info("")
-    logging.info("")
-    logging.info(f"Using {llm_type} as LLM")
-    logging.info("")
-    logging.info("")
-
-   # We process applications one by one
-    for file in files:
-        msg_file_path = f"media/temp/{file.filename}"
-        with open(msg_file_path, "wb") as f:
-            f.write(await file.read())
-
-
-        count += 1
-
-        logging.info("")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-
-        logging.info(f"Processing application {count}/{number_applications}")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-
-        # msg_file_path = email_folder + '/' + email_file
-
-        try:
-            ApplicationData = processApplication(msg_file_path=msg_file_path, task=task, llm=llm)
-        except Exception as e:
-            failed += 1
-            error_message = f"Error with file {file}. Error={e}"
-            logging.error(error_message)
-            new_message = error_message + '\n ' +  task.message
-            task.message = new_message + '\n ' +  task.message
-            task.save(status="running", message=new_message)
-            failed_list.append({"file": file, "error": str(e)})
-            
-            continue
-
-
-        if ApplicationData==None:
-            is_application_already_in_database += 1
-        else:
-            is_application_new_in_database += 1
-
-    content = {"message": f"number of processed applications = {count}",
-                "new applications": is_application_new_in_database,
-                "applications in the database": is_application_already_in_database,
-                "number applications failed": failed,
-                "failed application list": failed_list
-    }
-    new_message = "Finish" + '\n ' +  task.message
-    task.message = new_message + '\n ' +  task.message
-    task.save(status="finish", message=new_message)
-
-    email_message = "Finish processing applications"
-    recipient_email = "gkamdemdeteyou@aubay.com"
-    subject = "AI Recruiter assistant"
-    sendEmailGeneral(recipient_email, email_message, subject)
+    # Function to process all the files asynchronously
+    await processMultipleApplications(files=files, recipient_email=recipient_email, llm_type=llm_type)
 
     return JSONResponse(content=content, status_code=200)
 

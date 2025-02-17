@@ -32,9 +32,10 @@ from pdfminer.layout import LAParams
 # Add the subfolders to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../llm'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../email'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../mysqldb'))
 
-
+from mails import sendEmailGeneral
 from prompts import extractExperienceCandidat, extractDiplomeCandidat, extractHardSkillsCandidat, extractCertificationsCandidat
 from prompts import extractExperienceRequired, extractDiplomeRequired, extractHardSkillsRequired, extractCertificationsRequired
 
@@ -137,18 +138,16 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
 
     return job
 
-def processJobs(pdf_jobs_folder: str, task: Task):
+async def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
 
     logging.info("Processing Job Description ....")
 
 
     '''
-    Process a job desc and store requirements into a mysql database, and chunk in a vector database
+    
 
     Input: 
-        - pdf_jobs_folder: input folder for PDF job desc files 
-        - embeddings: embeding for storage in a vector databse
-        - vector_database: Vector database for storage of chunk
+
 
     Output: 
         - 0
@@ -156,67 +155,87 @@ def processJobs(pdf_jobs_folder: str, task: Task):
 
     '''
 
-    
-    files = os.listdir(pdf_jobs_folder)
-    
-    logging.info(f"There are {len(files)} job desks")
 
+    logging.info("")
+    logging.info("")
 
-    total_number_jobs = len(files)
-    Failed = []
-
-    failed_jobs = 0
-    success_jobs = 0
+    # Counting application
     count = 0
+    number_jobs = len(files)
+    logging.info(f"There are {number_jobs} jobs")
 
+    success, failed = 0, 0
+    job_failed = []
+    errors = []
+
+    # We set the llm to use
     llm = setLLM(llm_type=llm_type)
-    
+    logging.info(f"Using {llm_type} as LLM")
+    logging.info("")
+    logging.info("")
 
-    for i in range(len(files)):
+    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
+            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
+            message="Started processing a single job")
 
+    logging.info(f"TaskId = {task.Id}")
 
+   # We process jon descs one by one
+  
+    for file in files:
         try:
-            # ith job desk file
-            logging.info("")
-            logging.info("")
-            logging.info("")
-            file = pdf_jobs_folder + '/' + files[i]
+            input_pdf_file = f"media/pdf_job/{file.filename}"
+            logging.info(f"Opening a new file at {input_pdf_file}")
+            with open(input_pdf_file, "wb") as f:
+                f.write(await file.read())
 
-            logging.info(f"job {count + 1}/{total_number_jobs}")
+            logging.info(f"Opened a new file at {input_pdf_file}")
 
-            job = processSingleJob(job_pdf_path=file, task=task, llm=llm)
 
-            update_message = f"Success with {job.role}"
-            logging.info(update_message)
-            new_message = update_message + '\n ' +  task.message
-            task.message = update_message + '\n ' +  task.message
-            task.save(status="running", message=new_message)
-
-            success_jobs += 1
-            logging.info(f"...............=>Job {job.role} saved successfully in the database")
             count += 1
-        
+
+            logging.info("")
+            logging.info("")
+            logging.info("")
+
+            logging.info(f"Processing application {count}/{number_jobs}")
+            logging.info("")
+            logging.info(f"input_pdf_file={input_pdf_file}")
+            job = processSingleJob(input_pdf_file, task=task, llm=llm)
+
+            # Updating task with success
+            task.save(status="running", message=f"Job {job.role} has been successfully")
+            success += 1
+
+ 
         except Exception as e:
+            logging.info(f"We have an error with file. Error={file}")
+            logging.info(f"The Error is {e}")
+            job_failed.append(file)
+            errors.append(e)
+            failed += 1
+ 
+    content = {"message": f"Finish processing {number_jobs} job descs",
+                "Number of jobs processed successfully": success,
+                "Number of jobs whose processing has failed.": failed,
+                "List of jobs whose processing has failed.": job_failed,
+                "Errors associated to failure": errors}
 
-            failed_jobs += 1
-            Failed.append(files[i])
+    logging.info(f"content")
 
-            error_message = f"Error when processing job {files[i]}. Error={e}"
-            logging.error(error_message)
+    message = f"""Finish processing {number_jobs} job descs. \n 
+    Number of jobs processed successfully: {success} \n 
+    Number of jobs whose processing has failed: {failed} \n 
+    List of jobs whose processing has failed.: {job_failed} \n 
+    Errors associated to failure: {errors} \n """
 
-            new_message = error_message + '\n ' +  task.message
-            task.message = new_message + '\n ' +  task.message
-            task.save(status="running", message=new_message)
+    logging.info("Sending emails ...")
 
-            count += 1
-      
-    final_message = "Task ended" + '\n ' + task.message
-    task.message = final_message + '\n ' +  task.message
-    task.save(status="success", message=final_message)
-    logging.info("Finish with function processJobs")
-    logging.info(f"Number of jobs = {total_number_jobs}  Success = {success_jobs}  Failed = {failed_jobs}")
-    
-    return total_number_jobs, success_jobs, failed_jobs, Failed
+    subject = "Processing of your jobs"
+    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
+
+    logging.info("Email sent ...")
+    return message
 
        
 def getChunk(file_path):
@@ -303,7 +322,7 @@ def setRoleId(role):
         return roleId
 
 
-def processApplication(msg_file_path, task, llm):
+def processSingleApplication(msg_file_path, task, llm):
 
 
     '''
@@ -428,3 +447,93 @@ def processApplication(msg_file_path, task, llm):
         logging.error(f"Issue with job application {msg_file_path}. Error={e}")
 
         raise Exception(e)
+
+
+async def processMultipleApplications(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
+
+    # Generating a new task
+    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="multiple applications", 
+        date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
+        message="Started processing multiple candidate applications")
+
+    logging.info(f"TaskId = {task.Id}")
+
+    number_applications = len(files)
+    count = 0
+    is_application_already_in_database=0
+    is_application_new_in_database = 0
+    failed = 0
+    failed_list = []
+
+    # We set the llm to use
+    llm = setLLM(llm_type=llm_type)
+    logging.info("")
+    logging.info("")
+    logging.info(f"Using {llm_type} as LLM")
+    logging.info("")
+    logging.info("")
+
+   # We process applications one by one
+    for file in files:
+        msg_file_path = f"media/temp/{file.filename}"
+        logging.info(f"Opening a new file at {msg_file_path}")
+        with open(msg_file_path, "wb") as f:
+            f.write(await file.read())
+
+        logging.info(f"Opened a new file at {msg_file_path}")
+        count += 1
+
+        logging.info("")
+        logging.info("")
+        logging.info("")
+        logging.info("")
+        logging.info("")
+
+        logging.info(f"Processing application {count}/{number_applications}")
+        logging.info("")
+        logging.info("")
+        logging.info("")
+
+        # msg_file_path = email_folder + '/' + email_file
+
+        try:
+            ApplicationData = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
+        except Exception as e:
+            failed += 1
+            error_message = f"Error with file {file}. Error={e}"
+            logging.error(error_message)
+            new_message = error_message + '\n ' +  task.message
+            task.message = new_message + '\n ' +  task.message
+            task.save(status="running", message=new_message)
+            failed_list.append({"file": file, "error": str(e)})
+            
+            continue
+
+
+        if ApplicationData==None:
+            is_application_already_in_database += 1
+        else:
+            is_application_new_in_database += 1
+
+    content = {"message": f"Finish processing {count} applications",
+                "new applications": is_application_new_in_database,
+                "applications in the database": is_application_already_in_database,
+                "number applications failed": failed,
+                "failed application list": failed_list
+    }
+    new_message = "Finish" + '\n ' +  task.message
+    task.message = new_message + '\n ' +  task.message
+    task.save(status="finish", message=new_message)
+
+    message = f"""Finish processing {count} applications. \n 
+    Number of new applications: {is_application_new_in_database} \n 
+    Number of applications already in the database: {is_application_already_in_database} \n 
+    Number applications failed.: {failed} \n 
+    List of applications that failed: {failed_list} \n """
+
+    subject = "Processing of applications"
+    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
+
+
+
+    return content
