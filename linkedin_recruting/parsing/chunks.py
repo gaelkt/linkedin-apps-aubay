@@ -42,6 +42,7 @@ from prompts import extractExperienceRequired, extractDiplomeRequired, extractHa
 import logging
 
 from libs import Application, Job, Task
+from typing import List
 
 load_dotenv()
 resume_folder = os.environ['RESUME_FOLDER']
@@ -70,8 +71,6 @@ def convert_word_2_pdf(word_path, pdf_path):
     except Exception as e:
         logging.info(e)
         raise Exception(e)
-
-
 
 def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
 
@@ -138,7 +137,8 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
 
     return job
 
-async def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
+    
+def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
 
     logging.info("Processing Job Description ....")
 
@@ -187,7 +187,7 @@ async def processJobs(files, recipient_email: str, llm_type: str = os.environ['L
             input_pdf_file = f"media/pdf_job/{file.filename}"
             logging.info(f"Opening a new file at {input_pdf_file}")
             with open(input_pdf_file, "wb") as f:
-                f.write(await file.read())
+                f.write(file.read())
 
             logging.info(f"Opened a new file at {input_pdf_file}")
 
@@ -237,7 +237,11 @@ async def processJobs(files, recipient_email: str, llm_type: str = os.environ['L
     logging.info("Email sent ...")
     return message
 
-       
+
+
+
+
+    
 def getChunk(file_path):
 
     '''

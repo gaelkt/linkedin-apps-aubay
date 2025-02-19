@@ -16,7 +16,8 @@ database_name=os.environ['DB_NAME']
 table_jobs = os.environ['DB_TABLE_JOB']  
 table_applications = os.environ['DB_TABLE_APPLICATIONS'] 
 table_scores = os.environ['DB_TABLE_SCORES']
-table_tasks = os.environ['DB_TABLE_TASKS']  
+table_tasks = os.environ['DB_TABLE_TASKS'] 
+celery_table = os.environ['CELERY_TABLE_TASKS'] 
 
 database_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database_name}"
 
@@ -98,13 +99,22 @@ def refreshDB():
             logging.info(f"The Application table {table_jobs} already exists ")
 
 
-        # Checking Task table
+        # Checking Task tablecelery_table
         if not checkTable(table_name=table_tasks):
             # APPLICATIONS table does not exist. We Create a new one
             createTaskTable(table_tasks=table_tasks)
             logging.info(f"Task table {table_tasks} has been created successfully !") 
         else:
             logging.info(f"The Task table {table_tasks} already exists ")
+            
+        # Checking Task table celery_table
+        # Checking Task table celery_table
+        if not checkTable(table_name=celery_table):
+            # APPLICATIONS table does not exist. We Create a new one
+            createTaskTable(table_tasks=celery_table)
+            logging.info(f"Task table {celery_table} has been created successfully !") 
+        else:
+            logging.info(f"The Task table {celery_table} already exists ")
 
 
         # Checking SCORES table
@@ -553,6 +563,53 @@ def createTaskTable(table_tasks):
             cursor.close()
             connection.close()
 
+
+def createTaskCeleryTable(celery_table):
+
+    logging.info(f"Creating table: {celery_table}")
+
+    '''
+    Create table for task
+
+    Inputs:
+        - celery_table: Task table to be created
+
+    Output:
+        None
+
+
+    '''
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(host=host, port=port,user=user, password=password, database=database_name)
+        if connection.is_connected():
+            cursor = connection.cursor()
+            # SQL command to create the jobs table
+            create_table_query = f"""
+            CREATE TABLE IF NOT EXISTS {celery_table} (
+            Id VARCHAR(255) NOT NULL PRIMARY KEY,
+            user VARCHAR(255) NOT NULL,
+            type VARCHAR(255) NOT NULL,
+            date DATETIME NOT NULL,
+            status VARCHAR(255) NOT NULL,
+            message VARCHAR(255) NOT NULL
+        );
+        """
+            
+            # Execute the SQL command
+            cursor.execute(create_table_query)
+            connection.commit()  # Save changes
+            logging.info(f"Task table {celery_table} created successfully.")
+
+    except Error as e:
+        logging.error(f"Error in the function createTaskTable: {e}")
+        raise Exception(e)
+
+    finally:
+        # Close the database connection
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
 
 
 

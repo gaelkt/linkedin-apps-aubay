@@ -18,6 +18,42 @@ load_dotenv()
 resume_folder = os.environ['RESUME_FOLDER']
 
 
+class TaskCelery:
+    def __init__(self, Id, user, task_type, date, status="launched", message="The task is started"): 
+        self.Id = Id
+        self.user = user
+        self.type = task_type
+        self.date = date
+        self.status = status
+        self.message = message
+        self.insert()
+    def insert(self):
+        engine = generate_engine()
+        table_tasks = os.environ['CELERY_TABLE_TASKS']
+        insert_query = f"""
+        INSERT INTO {table_tasks} (Id, user, type, date, status, message)
+        VALUES (:Id, :user, :type, :date, :status, :message);
+        """
+        values = {
+        "Id": self.Id,
+        "user": self.user,
+        "type": self.type,
+        "date": self.date,
+        "status": self.status,
+        "message": self.message
+            }
+        with engine.connect() as connection:
+            with connection.begin():
+                connection.execute(text(insert_query), values)
+                logging.info(f"...............=>Saved task {self.Id} to database")
+        logging.info("Insertion ok")
+        return 0
+    def setId(self,id:str):
+        self.Id=id
+    def save(self, status="success", message="Task terminated"):
+        logging.info(f"Saving task {self.Id} with status= {status} and message={message}")
+
+
 
 class Task:
     
@@ -62,8 +98,14 @@ class Task:
         
         logging.info("Insertion ok")
         return 0
+    def setId(self,id:str):
+        self.Id=id
 
     def save(self, status="success", message="Task terminated"):
+        logging.info(f"Saving task {self.Id} with status= {status} and message={message}")
+        
+    def info(self, status="Pending", message="Task Pending"):
+        
         logging.info(f"Saving task {self.Id} with status= {status} and message={message}")
 
         try:

@@ -24,8 +24,11 @@ from utils import langchain_agent, langchain_agent_sql
 
 from chunks import processJobs
 from chunks import processMultipleApplications
+from tasks import process_jobs_task, process_multiple_applications_task
 from mysql_functions import refreshDB, getJobs
 from mails import sendEmail
+from mails import sendEmailGeneral
+from libs import TaskCelery
 from libs import selectApplication, Task, setLLM
 from datetime import datetime
 from helper import generate_random_id
@@ -37,7 +40,10 @@ from langchain.prompts import ChatPromptTemplate
 
 import logging
 import sys
-
+import shutil
+import time
+from celery.result import AsyncResult
+from tasks import process_job_task
 
 # logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
 
@@ -49,6 +55,7 @@ logging.info("Jesus Christ is my Savior")
 
 
 load_dotenv()
+file_paths = []
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 default_pdf_jobs_folder = os.environ['PDF_JOBS_FOLDER']
@@ -56,6 +63,10 @@ default_email_folder = os.environ['EMAIL_FOLDER']
 default_resume_folder = os.environ['RESUME_FOLDER']
 
 llm_type = os.environ['LLM_TYPE']
+
+
+TEMP_FOLDER = os.environ['TEMP_JOB']
+os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 # We create resume_folder if it does not exist
 if not os.path.exists(default_resume_folder):
@@ -148,8 +159,8 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
 # Endpoint used to process multiple job and store its requirements in the database
 # Jobs are sent via a POST request
-@app.post("/jobs/")
-async def multipleJobs(files: List[UploadFile] = File(...), 
+@app.post("/job/")
+async def multipleJob(files: List[UploadFile] = File(...), 
                        recipient_email: str = "gkamdemdeteyou@aubay.com",
                        llm_type: str = os.environ['LLM_TYPE']):
 
@@ -157,10 +168,20 @@ async def multipleJobs(files: List[UploadFile] = File(...),
     # Checking validity of files
     validity=True
     invalid_files = []
+    saved_paths=[]
     for file in files:
         if not file.filename.endswith(".pdf"):
             invalid_files.append(file)
             validity = False
+            
+        else:
+            #file_path = os.path.join(TEMP_FOLDER, file.filename)
+            file_path = f"media/pdf_job/{file.filename}"
+            logging.info(f"Saving file {file_path}")
+            with open(file_path, "wb") as f:
+                f.write(await file.read())  # Sauvegarde le fichier
+            saved_paths.append(file_path)  # Ajoute le chemin du fichier
+            
             
     # At least one file is invalid
     if validity==False:
@@ -171,14 +192,98 @@ async def multipleJobs(files: List[UploadFile] = File(...),
     # All job descs are valid
     # Function processJobs is run asynchronously
     logging.info("Processing jobs...")
-    await processJobs(files=files, recipient_email=recipient_email, llm_type = llm_type)
+    #await processJobs(files=files, recipient_email=recipient_email, llm_type = llm_type)
+    
+    
+    
+    logging.info("Sending task to Celery...")
+    task = process_jobs_task.delay(saved_paths, recipient_email, os.environ['LLM_TYPE'])
 
-    content = {"message": f"Processing {len(files)} job descs"}
+    content = {"task_id": task.id,"message": f"Processing {len(files)} job descs"}
 
     return JSONResponse(content=content, status_code=200)
 
+@app.post("/jobs/")
+def multipleJobs(files: List[UploadFile] = File(...), 
+                       recipient_email: str = "gkamdemdeteyou@aubay.com",
+                       llm_type: str = os.environ['LLM_TYPE'], user: str=os.environ['USER']):
+    
+    # Checking validity of files
+    validity = True
+    invalid_files = []
+    saved_paths = []
+    for file in files:
+        if not file.filename.endswith(".pdf"):
+            invalid_files.append(file.filename)
+            validity = False
+        else:
+            file_path = f"media/pdf_job/{file.filename}"
+            logging.info(f"Saving file {file_path}")
+            with open(file_path, "wb") as f:
+                f.write(file.file.read())  # Sauvegarde le fichier
+            saved_paths.append(file_path)  # Ajoute le chemin du fichier
+    
+    # At least one file is invalid
+    if not validity:
+        logging.info(f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf")
+        content = {"message": f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf"}
+        return JSONResponse(content=content, status_code=400)
+    
+    # All job descs are valid
+    logging.info("Processing jobs...")
+    
+    tasks = {}
+    
+    # Lancer les tâches et stocker leur ID
+    for path in saved_paths:
+        print(f"Processing {path}")
+        result = process_job_task.delay(path, llm_type)
+        tasks[result.id] = {"path": path, "status": "PENDING", "result": None}
+    
+    # Vérifier l'état des tâches jusqu'à ce qu'elles soient toutes terminées
+    while any(task["status"] not in ["SUCCESS", "FAILURE"] for task in tasks.values()):
+        for task_id in tasks.keys():
+            result = AsyncResult(task_id)
+            current_status = result.status
 
+            if current_status != tasks[task_id]["status"]:
+                print(f"Tâche {task_id} - Nouveau statut : {current_status}")
+                tasks[task_id]["status"] = current_status
 
+                if current_status == "SUCCESS":
+                    tasks[task_id]["result"] = result.result  # Stocker le résultat si nécessaire
+                elif current_status == "FAILURE":
+                    tasks[task_id]["result"] = f"Échec : {result.result}"
+
+        time.sleep(5)  # Attendre avant la prochaine vérification
+    
+    # Une fois toutes les tâches terminées, envoyer un seul e-mail avec le résumé des résultats
+    subject = "Processing of your jobs is done"
+    body = "you have processed the following jobs :\n\n"
+    
+    for task_id, task_info in tasks.items():
+        body += f"- File : {task_info['path']}\n  Status : {task_info['status']}\n  Résultat : {task_info['result']}\n\n"
+        job_name = task_info['path'].split("/")[-1]
+        if task_info["status"] == "SUCCESS":
+            message = f"Successful process job {job_name}"
+        else:
+            message = f"Failed process job {job_name}"
+        task = TaskCelery(
+            Id=task_id,
+            user=user,
+            task_type="processing_jobs",
+            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"),
+            status=task_info["status"],
+            message=message
+        )
+        
+        task.save()
+    
+    sendEmailGeneral(recipient_email=recipient_email, message=body, subject=subject)
+    
+    print("E-mail envoyé avec le résumé des tâches.")
+    
+    return JSONResponse(content={"message": "Jobs processing started successfully."}, status_code=200)
 
 
 # Endpoint used to process multiple applications and store their qualifications in the database
@@ -203,12 +308,17 @@ async def multipleApplications(files: List[UploadFile] = File(...),
         return JSONResponse(content=content, status_code=400)
 
     # All the files are valid
-    content = {"message": f"Processing {len(files)} applications"}
+    
 
     # Function to process all the files asynchronously
-    await processMultipleApplications(files=files, recipient_email=recipient_email, llm_type=llm_type)
+    
+    task = process_multiple_applications_task.delay(files, recipient_email, os.environ['LLM_TYPE'])
+    
+    #await processMultipleApplications(files=files, recipient_email=recipient_email, llm_type=llm_type)
+    content = {"task_id": task.id,"message": f"Processing {len(files)} applications"}
 
     return JSONResponse(content=content, status_code=200)
+
 
 
 @app.get("/report/")
