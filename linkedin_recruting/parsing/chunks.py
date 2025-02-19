@@ -532,7 +532,9 @@ async def processMultipleApplications(files, recipient_email: str, llm_type: str
     List of applications that failed: {failed_list} \n """
 
     subject = "Processing of applications"
+    logging.info(f"Sending email at {recipient_email}")
     sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
+    logging.info(f"Sent email at {recipient_email}")
 
 
 

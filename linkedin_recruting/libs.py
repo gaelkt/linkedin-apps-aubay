@@ -499,6 +499,8 @@ def setLLM(llm_type=os.environ['LLM_TYPE']):
     from langchain_ollama.llms import OllamaLLM
     from langchain_openai import OpenAI
     from langchain.chat_models import ChatOpenAI
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain.schema import AIMessage, HumanMessage
 
     if llm_type == "gpt-4-turbo":
         llm = ChatOpenAI(api_key=os.environ['OPENAI_API_KEY'], model="gpt-4-turbo", temperature=0)
@@ -529,6 +531,11 @@ def setLLM(llm_type=os.environ['LLM_TYPE']):
 
     elif llm_type == "phi3.5:3.8b":
         llm = OllamaLLM(model="phi3.5:3.8b", temperature=0.0) 
+
+    elif llm_type == "gemini":
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=os.environ['GOOGLE_API_KEY'])
+
+
 
     else:
         logging.info("Invalid llm")

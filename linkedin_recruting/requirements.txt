@@ -30,3 +30,5 @@ PyMySQL==1.1.1
 pdfminer
 pdfminer.six
 python-multipart
+langchain-google-genai
+google-generativeai
