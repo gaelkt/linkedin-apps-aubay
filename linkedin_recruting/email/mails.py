@@ -137,7 +137,53 @@ def sendEmailGeneral(recipient_email, message, subject):
         logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
         raise Exception(e)
 
+def sendEmailApplication(recipient_email=recipient_email, applications_received=number_applications,
+    applications_processed=count, output_log=output_log):
 
+    """
+    Send an email when all candidate applications are processed
+
+    Inputs:
+        - recipient_email(str): email of the recipient
+        - applications_received(int): Number of applications received for processing
+        - applications_processed(int): Number of applications actually processed
+        - output_log(list): logs for each application. Each element is a dict with the keys:
+            * "filename": application sent for processing
+            * "status": result of the process ("success" or "failed")
+            * "description": raison for failure
+       
+
+    Output
+
+    """
+
+    logging.info(f"Function sendEmailGeneral recipient_email={recipient_email}")
+
+    # Check if the email is valid or not
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
+
+    try:
+    
+    # Edit this part to have an HTML email with a body
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(message, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
+        raise Exception(e)
 
 def is_valid_email(email: str) -> bool:
     """

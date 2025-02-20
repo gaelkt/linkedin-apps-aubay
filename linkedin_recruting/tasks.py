@@ -16,7 +16,7 @@ from libs import setLLM
 from dotenv import load_dotenv
 import time
 
-from mails import sendEmailGeneral
+from mails import sendEmailGeneral, sendEmailApplication
 
 load_dotenv()
 
@@ -102,6 +102,8 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
     failure = 0 # Number of applications processed with an error
     error_list = [] # List of applications which failed
 
+    output_log = []
+
     is_application_already_in_database=0
     is_application_new_in_database = 0
 
@@ -137,15 +139,19 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
         logging.info("")
         logging.info("")
 
-        # msg_file_path = email_folder + '/' + email_file
+        filename = os.path.basename(msg_file_path)
 
         try:
             ApplicationData = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
             success += 1
+            current_output_log = {"filename": filename, "status": "success", "description": "Application processed successfully"}
+            
         except Exception as e:
             failure += 1
 
-            filename = os.path.basename(msg_file_path)
+            current_output_log = {"filename": filename, "status": "failed", "description": e}
+
+
             error_list.append({"filename": filename, "error": e})
             error_message = f"Error with file {filename}. Error={e}"
             logging.error(error_message)
@@ -171,23 +177,24 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
         if ApplicationData==None:
             is_application_already_in_database += 1
+            current_output_log["description"] = "Application already in the database"
         else:
             is_application_new_in_database += 1
+
+        output_log.append(current_output_log)
 
 
     new_message = "Finish" + '\n ' +  task.message
     task.message = new_message + '\n ' +  task.message
     task.save(status="finish", message=new_message)
 
-    message = f"""Finish processing {count} applications. \n 
-    Number of new applications: {is_application_new_in_database} \n 
-    Number of applications already in the database: {is_application_already_in_database} \n 
-    Number applications failed.: {failure} \n 
-    List of applications that failed: {error_list} \n """
 
-    subject = "Processing of candidate applications"
+
+
     logging.info(f"Sending email at {recipient_email}")
-    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
+    sendEmailApplication(recipient_email=recipient_email, applications_received=number_applications,
+    applications_processed=count, output_log=output_log)
+
     logging.info(f"Sent email at {recipient_email}")
 
 
