@@ -22,8 +22,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
 from utils import langchain_agent, langchain_agent_sql
 
-
-from tasks import processMultipleJobs, processMultipleApplications
+from chunks import processJobs
+from chunks import processMultipleApplications
+from tasks import process_jobs_task, process_multiple_applications_task
 from mysql_functions import refreshDB, getJobs
 from mails import sendEmail
 from mails import sendEmailGeneral
@@ -207,41 +208,95 @@ def multipleJobs(files: List[UploadFile] = File(...),
     # Checking validity of files
     validity = True
     invalid_files = []
-    saved_path_jobs = []
+    saved_paths = []
     for file in files:
         if not file.filename.endswith(".pdf"):
             invalid_files.append(file.filename)
             validity = False
-
+        else:
+            file_path = f"media/pdf_job/{file.filename}"
+            logging.info(f"Saving file {file_path}")
+            with open(file_path, "wb") as f:
+                f.write(file.file.read())  # Sauvegarde le fichier
+            saved_paths.append(file_path)  # Ajoute le chemin du fichier
+    
     # At least one file is invalid
     if not validity:
         logging.info(f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf")
         content = {"message": f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf"}
         return JSONResponse(content=content, status_code=400)
     
-    # All job descs are valid and we save the path
-    logging.info("Saving files for processing")
-
-    for file in files:  
-        file_path = f"media/pdf_job/{file.filename}"
-        logging.info(f"Saving file {file_path}")
-        with open(file_path, "wb") as f:
-            f.write(file.file.read())  # Sauvegarde le fichier
-        saved_path_jobs.append(file_path)  # Ajoute le chemin du fichier
+    # All job descs are valid
+    logging.info("Processing jobs...")
     
     tasks = {}
-    logging.info("All files saved. Now running asynchronous tasks...")
-    output = processMultipleJobs.delay(saved_path_jobs, recipient_email, llm_type)
-    logging.info("Finish with asynchronous tasks")
-    logging.info(f"output={output}")
-    celery_task_id = output.id
-    logging.info(f"Task ID={celery_task_id}")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
     
+    # Lancer les tâches et stocker leur ID
+    for path in saved_paths:
+        print(f"Processing {path}")
+        result = process_job_task.delay(path, llm_type)
+        logging.info("------------------------------------")
+        tasks[result.id] = {"path": path, "status": "PENDING", "result": None}
+        time.sleep(5)
+    
+    # Vérifier l'état des tâches jusqu'à ce qu'elles soient toutes terminées
+    logging.info("Check task status...")
+    i=0
+    while any(task["status"] not in ["SUCCESS", "FAILURE"] for task in tasks.values()):
+        i=i+1
+        logging.info(f"N°{i} check task status...")
+        for task_id in tasks.keys():
+            
+            try:
+                logging.info(f"Task {task_id}...")
+                result = AsyncResult(task_id)
+                logging.info(f"behind check current status for task {task_id}...")
+                current_status = result.status
+                logging.info(f"before check current status for task {task_id}...")
+                logging.info(f"Current status: {current_status}")
+                if current_status != tasks[task_id]["status"]:
+                   print(f"Tâche {task_id} - Nouveau statut : {current_status}")
+                   tasks[task_id]["status"] = current_status
 
-    return JSONResponse(content={"message": f"Processing {saved_path_jobs}. ID task: {celery_task_id}."}, status_code=200)
+                if current_status == "SUCCESS":
+                    tasks[task_id]["result"] = result.result  # Stocker le résultat si nécessaire
+                elif current_status == "FAILURE":
+                    tasks[task_id]["result"] = f"Échec : {result.result}"
+            except Exception as e:
+                logging.error("check task status error")
+                logging.error(f"Error: {e}")
+            
+
+            
+        time.sleep(5)  # Attendre avant la prochaine vérification
     
+    # Une fois toutes les tâches terminées, envoyer un seul e-mail avec le résumé des résultats
+    subject = "Processing of your jobs is done"
+    body = "you have processed the following jobs :\n\n"
+    
+    for task_id, task_info in tasks.items():
+        body += f"- File : {task_info['path']}\n  Status : {task_info['status']}\n  Résultat : {task_info['result']}\n\n"
+        job_name = task_info['path'].split("/")[-1]
+        if task_info["status"] == "SUCCESS":
+            message = f"Successful process job {job_name}"
+        else:
+            message = f"Failed process job {job_name}"
+        task = TaskCelery(
+            Id=task_id,
+            user=user,
+            task_type="processing_jobs",
+            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"),
+            status=task_info["status"],
+            message=message
+        )
+        
+        task.save()
+    
+    sendEmailGeneral(recipient_email=recipient_email, message=body, subject=subject)
+    
+    print("E-mail envoyé avec le résumé des tâches.")
+    
+    return JSONResponse(content={"message": "Jobs processing started successfully."}, status_code=200)
 
 
 # Endpoint used to process multiple applications and store their qualifications in the database
@@ -254,8 +309,6 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     # Checking validity of files
     validity=True
     invalid_files = []
-    saved_path_applications = []
-
     for file in files:
         if not file.filename.endswith(".msg"):
             invalid_files.append(file)
@@ -268,27 +321,16 @@ async def multipleApplications(files: List[UploadFile] = File(...),
         return JSONResponse(content=content, status_code=400)
 
     # All the files are valid
-    logging.info("Saving files for processing")
     
-    for file in files:  
-        file_path = f"media/temp/{file.filename}"
-        logging.info(f"Saving file {file_path}")
-        with open(file_path, "wb") as f:
-            f.write(file.file.read())  # Sauvegarde le fichier
-        saved_path_applications.append(file_path)  # Ajoute le chemin du fichier
+
     # Function to process all the files asynchronously
     
-    output = processMultipleApplications.delay(saved_path_applications, recipient_email, os.environ['LLM_TYPE'])
-    logging.info("Finish with asynchronous tasks")
-    logging.info(f"output={output}")
-    celery_task_id = output.id
-    logging.info(f"Task ID={celery_task_id}")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
+    task = process_multiple_applications_task.delay(files, recipient_email, os.environ['LLM_TYPE'])
+    
+    #await processMultipleApplications(files=files, recipient_email=recipient_email, llm_type=llm_type)
+    content = {"task_id": task.id,"message": f"Processing {len(files)} applications"}
 
-    return JSONResponse(content={"message": f"Processing {len(saved_path_applications)}. ID task: {celery_task_id}."}, status_code=200)
-
-
+    return JSONResponse(content=content, status_code=200)
 
 
 

@@ -16,6 +16,8 @@ function App() {
   const [rolesList, setRolesList] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [email, setEmail] = useState('');
+  const [emailApp, setEmailApp] = useState('');
+  const [emailJob, setEmailJob] = useState('');
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roles, setRoles] = useState([]);
   const [pdfs, setPdfs] = useState([]);
@@ -112,7 +114,7 @@ function App() {
     try {
 
       setLoadingApps(true);
-      const response = await fetch(`http://${host}:8081/applications/`, {
+      const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}/`, {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
@@ -159,7 +161,7 @@ function App() {
   
     try {
       setLoadingJobs(true);
-      const response = await fetch(`http://${host}:8081/jobs/`, {
+      const response = await fetch(`http://${host}:8081/jobs/?recipient_email=${emailJob}`, {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
@@ -211,6 +213,14 @@ function App() {
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
+  };
+
+  const handleEmailJobChange = (e) => {
+    setEmailJob(e.target.value);
+  };
+
+  const handleEmailAppChange = (e) => {
+    setEmailApp(e.target.value);
   };
 
   const handleRoleSelection = (role) => {
@@ -337,6 +347,11 @@ function App() {
 
         {activeTab === 'process-job' && <div>
           <h3></h3>
+
+          <div className="mb-3">
+             <label htmlFor="job" className="form-label">Recipient Email</label>
+             <input type="email" id="job" className="form-control" value={emailJob} onChange={handleEmailJobChange}/>
+         </div>
           <ul>
         {selectedJobs.map((file, index) => (
           <li key={index}>{file.name}</li>
@@ -344,15 +359,14 @@ function App() {
       </ul>
 
       {/* Input pour le téléversement multiple */}
+      
       <input
         type="file"
         multiple
         className="form-control mb-3"
         onChange={handleJobUpload}
       />
-
-          
-
+   
           <button onClick={processJobs} className="btn btn-primary mb-3" style={{ backgroundColor: 'red', borderColor: 'red' }} disabled={loadingJobs}>
               Process Jobs
             </button>
@@ -497,6 +511,10 @@ function App() {
 
         {activeTab === 'process-apps' && <div>
           <h3></h3>
+          <div className="mb-3">
+               <label htmlFor="apps" className="form-label">Recipient Email</label>
+               <input type="email" id="apps" className="form-control" value={emailApp} onChange={handleEmailAppChange} />
+          </div>
           <ul>
         {selectedApplication.map((file, index) => (
           <li key={index}>{file.name}</li>
