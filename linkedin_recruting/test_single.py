@@ -1,13 +1,28 @@
-from tasks import process_job_task
+import os
+import sys
+# Add the subfolders to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), './'))
+sys.path.append(os.path.join(os.path.dirname(__file__), './llm'))
+sys.path.append(os.path.join(os.path.dirname(__file__), './email'))
+sys.path.append(os.path.join(os.path.dirname(__file__), './mysqldb'))
 
-path_files = ["media/pdf_job/Tech Lead Data Engineering.pdf", "media/pdf_job/Data Solutions Architect.pdf"]
+from mails import sendEmailGeneral
+from libs import TaskCelery
 
-status = []
 
-for path in path_files:
-    print(f"Processing {path}")
-    result = process_job_task.delay(path, "openai")
-    print(result.id)
-    print(result.status)
-    
-    
+import time
+from celery.result import AsyncResult
+from tasks import process_jobs_tasks
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
+saved_paths = ["media/pdf_job/Consultant Data Power BI.pdf", "media/pdf_job/Consultant Data Qlik.pdf","media/pdf_job/ML Engineer.pdf"]
+
+result=process_jobs_tasks.delay(saved_paths, "gemini","yiyuemej@yahoo.fr")
+print("check id")
+print(result.id)
+print("check status.")
+print(result.status)
+
