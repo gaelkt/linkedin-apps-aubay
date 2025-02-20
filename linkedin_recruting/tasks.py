@@ -163,7 +163,9 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
                 logging.info("")
                 logging.info("")
                 logging.info("")
+                logging.info("--------------------------------------------")
                 logging.info("Waiting for one minute")
+                logging.info("--------------------------------------------")
                 time.sleep(65)
 
 
