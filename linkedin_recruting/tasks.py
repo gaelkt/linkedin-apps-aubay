@@ -201,8 +201,23 @@ def process_job_task(job_pdf_path,llm_type):
 def test_task(x, y):
     return x + y
 
+@app.task
+def multiple_task(tab):
+    print("Starting multiple_task")
+    output=0
+    for i in tab:
+        print(f"{i}^2=",i*i)
+        output+=i*i
+    print("✅ multiple_task executed!")
+    return output
+
 
 @app.task
 def simple_task(file_paths, recipient_email, llm_type):
     print("✅ process_jobs_task executed!")
     return f"Processing {len(file_paths)} files for {recipient_email}"
+
+
+
+
+

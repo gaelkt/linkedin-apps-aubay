@@ -21,8 +21,8 @@ app = Celery("tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
 
 app.conf.update(
     task_routes={
-        "tasks.process_jobs_task": {"queue": "jobs"},
-        "tasks.process_multiple_applications_task": {"queue": "applications"},
+        "tasks.processMultipleJobs": {"queue": "jobs"},
+        "tasks.processMultipleApplications": {"queue": "applications"},
     },
     result_backend=CELERY_RESULT_BACKEND, 
     task_serializer="json",

@@ -21,10 +21,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
 
 from utils import langchain_agent, langchain_agent_sql
-
-from chunks import processJobs
-from chunks import processMultipleApplications
-from tasks import process_jobs_task, process_multiple_applications_task
+#from chunks import processMultipleApplications
+from tasks import process_job_task,processMultipleApplications,processMultipleJobs
+#from tasks import process_jobs_task, process_multiple_applications_task
 from mysql_functions import refreshDB, getJobs
 from mails import sendEmail
 from mails import sendEmailGeneral
@@ -156,52 +155,51 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
 # Endpoint used to process multiple job and store its requirements in the database
 # Jobs are sent via a POST request
-@app.post("/job/")
-async def multipleJob(files: List[UploadFile] = File(...), 
-                       recipient_email: str = "gkamdemdeteyou@aubay.com",
-                       llm_type: str = os.environ['LLM_TYPE']):
-
-
-    # Checking validity of files
-    validity=True
-    invalid_files = []
-    saved_paths=[]
-    for file in files:
-        if not file.filename.endswith(".pdf"):
-            invalid_files.append(file)
-            validity = False
-            
-        else:
-            #file_path = os.path.join(TEMP_FOLDER, file.filename)
-            file_path = f"media/pdf_job/{file.filename}"
-            logging.info(f"Saving file {file_path}")
-            with open(file_path, "wb") as f:
-                f.write(await file.read())  # Sauvegarde le fichier
-            saved_paths.append(file_path)  # Ajoute le chemin du fichier
-            
-            
-    # At least one file is invalid
-    if validity==False:
-        logging.info(f"file {invalid_files} are not valid pdf files. Please choose files with format .pdf")
-        content = {"message": f"files {invalid_files} are not valid pdf files. Please choose files with format .pdf"}
-        return JSONResponse(content=content, status_code=400)
-    
-    # All job descs are valid
-    # Function processJobs is run asynchronously
-    logging.info("Processing jobs...")
-    #await processJobs(files=files, recipient_email=recipient_email, llm_type = llm_type)
-    
-    
-    
-    logging.info("Sending task to Celery...")
-    task = process_jobs_task.delay(saved_paths, recipient_email, os.environ['LLM_TYPE'])
-
-    content = {"task_id": task.id,"message": f"Processing {len(files)} job descs"}
-
-    return JSONResponse(content=content, status_code=200)
-
 @app.post("/jobs/")
 def multipleJobs(files: List[UploadFile] = File(...), 
+                       recipient_email: str = "gkamdemdeteyou@aubay.com",
+                       llm_type: str = os.environ['LLM_TYPE'], user: str=os.environ['USER']):
+    
+    # Checking validity of files
+    validity = True
+    invalid_files = []
+    saved_path_jobs = []
+    for file in files:
+        if not file.filename.endswith(".pdf"):
+            invalid_files.append(file.filename)
+            validity = False
+
+    # At least one file is invalid
+    if not validity:
+        logging.info(f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf")
+        content = {"message": f"Files {invalid_files} are not valid PDF files. Please choose files with format .pdf"}
+        return JSONResponse(content=content, status_code=400)
+    
+    # All job descs are valid and we save the path
+    logging.info("Saving files for processing")
+
+    for file in files:  
+        file_path = f"media/pdf_job/{file.filename}"
+        logging.info(f"Saving file {file_path}")
+        with open(file_path, "wb") as f:
+            f.write(file.file.read())  # Sauvegarde le fichier
+        saved_path_jobs.append(file_path)  # Ajoute le chemin du fichier
+    
+
+    logging.info("All files saved. Now running asynchronous tasks...")
+    output = processMultipleJobs.delay(saved_path_jobs, recipient_email, llm_type)
+    logging.info("Finish with asynchronous tasks")
+    logging.info(f"output={output}")
+    celery_task_id = output.id
+    logging.info(f"Task ID={celery_task_id}")
+    result = AsyncResult(celery_task_id)
+    logging.info(f"AsyncResult={result}")
+    
+
+    return JSONResponse(content={"message": f"Processing {saved_path_jobs}. ID task: {celery_task_id}."}, status_code=200)
+
+@app.post("/job/")
+def multipleJobsAll(files: List[UploadFile] = File(...), 
                        recipient_email: str = "gkamdemdeteyou@aubay.com",
                        llm_type: str = os.environ['LLM_TYPE'], user: str=os.environ['USER']):
     

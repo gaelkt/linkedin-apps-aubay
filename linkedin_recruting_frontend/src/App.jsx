@@ -161,7 +161,7 @@ function App() {
   
     try {
       setLoadingJobs(true);
-      const response = await fetch(`http://${host}:8081/jobs/?recipient_email=${emailJob}`, {
+      const response = await fetch(`http://${host}:8081/jobs/?recipient_email=${emailJob}/`, {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
