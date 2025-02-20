@@ -179,30 +179,3 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
 
     return 0
-
-@app.task
-def process_job_task(job_pdf_path,llm_type):
-    print("✅ process_job_task STARTED")
-    
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
-            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-            message="Started processing a single job")
-    
-    
-    llm = setLLM(llm_type=llm_type)
-    logging.info(f"Using {llm_type} as LLM")
-    print(f"Into task.py : Using {llm_type} as LLM")
-
-    logging.info(f"TaskId = {task.Id}")
-    print(f"Into task.py :TaskId = {task.Id}")
-    
-    return processSingleJob(job_pdf_path, task, llm)
-@app.task
-def test_task(x, y):
-    return x + y
-
-
-@app.task
-def simple_task(file_paths, recipient_email, llm_type):
-    print("✅ process_jobs_task executed!")
-    return f"Processing {len(file_paths)} files for {recipient_email}"

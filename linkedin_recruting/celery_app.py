@@ -1,6 +1,7 @@
 from celery import Celery
 from dotenv import load_dotenv
 import os
+import logging
 load_dotenv()
 
 # Configuration Celery
@@ -21,8 +22,8 @@ app = Celery("tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
 
 app.conf.update(
     task_routes={
-        "tasks.process_jobs_task": {"queue": "jobs"},
-        "tasks.process_multiple_applications_task": {"queue": "applications"},
+        "tasks.processMultipleJobs": {"queue": "jobs"},
+        "tasks.processMultipleApplications": {"queue": "applications"},
     },
     result_backend=CELERY_RESULT_BACKEND, 
     task_serializer="json",
@@ -31,7 +32,7 @@ app.conf.update(
     worker_pool="solo",
 )
 
-print(app.conf.broker_url)
+logging.info(app.conf.broker_url)
 
 import tasks  
 app.autodiscover_tasks(["tasks"])
