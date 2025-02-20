@@ -25,7 +25,7 @@ tasks = {}
 # Lancer les tâches et stocker leur ID
 for path in saved_paths:
     print(f"Processing {path}")
-    result = process_job_task.delay(path, "openai")
+    result = process_job_task.delay(path, "gemini")
     tasks[result.id] = {"path": path, "status": "PENDING", "result": None}
 
 # Vérifier l'état des tâches jusqu'à ce qu'elles soient toutes terminées

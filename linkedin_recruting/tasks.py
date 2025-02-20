@@ -15,27 +15,7 @@ from datetime import datetime
 from libs import setLLM
 from dotenv import load_dotenv
 
-@app.task
-def process_jobs_task(saved_paths, recipient_email, llm_type):
-    
-    print("✅ process_job_task STARTED")
-    
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
-            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-            message="Started processing a single job")
-    
-    
-    llm = setLLM(llm_type=llm_type)
-    logging.info(f"Using {llm_type} as LLM")
-    print(f"Into task.py : Using {llm_type} as LLM")
-
-    logging.info(f"TaskId = {task.Id}")
-    print(f"Into task.py :TaskId = {task.Id}")
-       
-    result=processingJobs(saved_paths,task, recipient_email, llm)
-    task.setId(result.Id)
-    task.save(status="running", message=f"Jobs: {saved_paths} have been successfully")
-    return result
+load_dotenv()
 
 @app.task
 def process_multiple_applications_task(files, recipient_email, llm_type):

@@ -32,3 +32,4 @@ pdfminer.six
 python-multipart
 langchain-google-genai
 google-generativeai
+celery==5.2.0

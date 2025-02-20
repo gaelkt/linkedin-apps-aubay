@@ -163,8 +163,7 @@ function App() {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
-          // ⚠️ Ne pas ajouter 'Content-Type': 'multipart/form-data'
-          // Fetch l'ajoute automatiquement avec le bon boundary
+         
         },
         body: formData,
       });

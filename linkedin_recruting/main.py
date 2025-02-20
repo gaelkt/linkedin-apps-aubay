@@ -238,23 +238,39 @@ def multipleJobs(files: List[UploadFile] = File(...),
     for path in saved_paths:
         print(f"Processing {path}")
         result = process_job_task.delay(path, llm_type)
+        logging.info("------------------------------------")
         tasks[result.id] = {"path": path, "status": "PENDING", "result": None}
+        time.sleep(5)
     
     # Vérifier l'état des tâches jusqu'à ce qu'elles soient toutes terminées
+    logging.info("Check task status...")
+    i=0
     while any(task["status"] not in ["SUCCESS", "FAILURE"] for task in tasks.values()):
+        i=i+1
+        logging.info(f"N°{i} check task status...")
         for task_id in tasks.keys():
-            result = AsyncResult(task_id)
-            current_status = result.status
-
-            if current_status != tasks[task_id]["status"]:
-                print(f"Tâche {task_id} - Nouveau statut : {current_status}")
-                tasks[task_id]["status"] = current_status
+            
+            try:
+                logging.info(f"Task {task_id}...")
+                result = AsyncResult(task_id)
+                logging.info(f"behind check current status for task {task_id}...")
+                current_status = result.status
+                logging.info(f"before check current status for task {task_id}...")
+                logging.info(f"Current status: {current_status}")
+                if current_status != tasks[task_id]["status"]:
+                   print(f"Tâche {task_id} - Nouveau statut : {current_status}")
+                   tasks[task_id]["status"] = current_status
 
                 if current_status == "SUCCESS":
                     tasks[task_id]["result"] = result.result  # Stocker le résultat si nécessaire
                 elif current_status == "FAILURE":
                     tasks[task_id]["result"] = f"Échec : {result.result}"
+            except Exception as e:
+                logging.error("check task status error")
+                logging.error(f"Error: {e}")
+            
 
+            
         time.sleep(5)  # Attendre avant la prochaine vérification
     
     # Une fois toutes les tâches terminées, envoyer un seul e-mail avec le résumé des résultats
