@@ -137,8 +137,8 @@ def sendEmailGeneral(recipient_email, message, subject):
         logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
         raise Exception(e)
 
-def sendEmailApplication(recipient_email=recipient_email, applications_received=number_applications,
-    applications_processed=count, output_log=output_log):
+def sendEmailApplication(recipient_email=recipient_email, applications_received,
+    applications_processed, output_log):
 
     """
     Send an email when all candidate applications are processed
