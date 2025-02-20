@@ -106,7 +106,13 @@ const Dashboard = () => {
         <button className="send-button" onClick={handleSendQuery} disabled={loading}>
           <img src="/send-icon.png" alt="Envoyer" className="icon" />
         </button>
+        {loading && (
+        <div className="progress-bar">
+          <div className="progress-bar-fill"></div>
+        </div>
+      )}
       </div>
+      
     </div>
   );
 };
