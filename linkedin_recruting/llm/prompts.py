@@ -251,13 +251,14 @@ def extractExperienceCandidat(context, llm):
     else:
         logging.info("")
         logging.info("We go by the year of degree since methods 1 and 2 failed")
-        experience = current_year = datetime.now().year-annee-1
+        experience = datetime.now().year-annee-1
         logging.info(f"experience by degree year is ={experience}")
         logging.info("")
         logging.info("")
-        
 
-    
+    # We round to 1 decimal
+    experience = np.round(experience, 1)
+        
     logging.info(f"Final experience={experience}")
     
 
