@@ -16,7 +16,7 @@ from libs import setLLM
 from dotenv import load_dotenv
 import time
 
-from mails import sendEmailGeneral, sendEmailApplication
+from mails import sendEmailGeneral, computeEmailApplication
 
 load_dotenv()
 
@@ -192,8 +192,9 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
 
     logging.info(f"Sending email at {recipient_email}")
-    sendEmailApplication(recipient_email=recipient_email, applications_received=number_applications,
-    applications_processed=count, output_log=output_log)
+    logging.info(f"Number of applications received = {number_applications}")
+    logging.info(f"Number of applications processed = {count}")
+    computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications,applications_processed=count, output_log=output_log)
 
     logging.info(f"Sent email at {recipient_email}")
 
