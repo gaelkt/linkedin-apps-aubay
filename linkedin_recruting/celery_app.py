@@ -1,8 +1,8 @@
 from celery import Celery
 from dotenv import load_dotenv
 import os
-import logging
 load_dotenv()
+import logging
 
 # Configuration Celery
 broker_host=os.environ.get("RABBITMQ_HOST")

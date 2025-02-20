@@ -10,8 +10,8 @@ function App() {
   
   const [activeTab, setActiveTab] = useState('settings');
   const [role, setRole] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState('2024-10-01');
+  const [endDate, setEndDate] = useState('2024-10-31');
   const [filteredData, setFilteredData] = useState([]);
   const [rolesList, setRolesList] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -47,7 +47,7 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-        const response = await fetch(`http://${host}:8081/view_jobs/`);
+        const response = await fetch(`http://localhost:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
           const jobsList = Object.values(data).map((item) => ({
@@ -114,7 +114,7 @@ function App() {
     try {
 
       setLoadingApps(true);
-      const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}/`, {
+      const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}`, {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header
@@ -429,6 +429,7 @@ function App() {
                   <th>Name</th>
                   <th>Date</th>
                   <th>Score</th>
+                  <th>Freelance</th>
                   <th>Experience</th>
                   <th>Degree</th>
                   <th>Hard Skills</th>
@@ -447,6 +448,7 @@ function App() {
           <td>{item.name}</td>
           <td>{item.date}</td>
           <td>{item.score}</td>
+          <td>{item.freelance}</td>
           <td>{item.experience}</td>
           <td>{item.diplome}</td>
           <td style={{ fontSize: "13px" }}>{item.hard_skills}</td>
