@@ -1,6 +1,7 @@
 import os
 import sys
 from docx2pdf import convert
+import re
 # from pathlib import Path
 from dotenv import load_dotenv
 # from langchain_community.vectorstores import Chroma
@@ -138,104 +139,104 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
     return job
 
     
-def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
+# def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
 
-    logging.info("Processing Job Description ....")
+#     logging.info("Processing Job Description ....")
 
 
-    '''
+#     '''
     
 
-    Input: 
+#     Input: 
 
 
-    Output: 
-        - 0
+#     Output: 
+#         - 0
 
 
-    '''
+#     '''
 
 
-    logging.info("")
-    logging.info("")
+#     logging.info("")
+#     logging.info("")
 
-    # Counting application
-    count = 0
-    number_jobs = len(files)
-    logging.info(f"There are {number_jobs} jobs")
+#     # Counting application
+#     count = 0
+#     number_jobs = len(files)
+#     logging.info(f"There are {number_jobs} jobs")
 
-    success, failed = 0, 0
-    job_failed = []
-    errors = []
+#     success, failed = 0, 0
+#     job_failed = []
+#     errors = []
 
-    # We set the llm to use
-    llm = setLLM(llm_type=llm_type)
-    logging.info(f"Using {llm_type} as LLM")
-    logging.info("")
-    logging.info("")
+#     # We set the llm to use
+#     llm = setLLM(llm_type=llm_type)
+#     logging.info(f"Using {llm_type} as LLM")
+#     logging.info("")
+#     logging.info("")
 
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
-            date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-            message="Started processing a single job")
+#     task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
+#             date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
+#             message="Started processing a single job")
 
-    logging.info(f"TaskId = {task.Id}")
+#     logging.info(f"TaskId = {task.Id}")
 
-   # We process jon descs one by one
+#    # We process jon descs one by one
   
-    for file in files:
-        try:
-            input_pdf_file = f"media/pdf_job/{file.filename}"
-            logging.info(f"Opening a new file at {input_pdf_file}")
-            with open(input_pdf_file, "wb") as f:
-                f.write(file.read())
+#     for file in files:
+#         try:
+#             input_pdf_file = f"media/pdf_job/{file.filename}"
+#             logging.info(f"Opening a new file at {input_pdf_file}")
+#             with open(input_pdf_file, "wb") as f:
+#                 f.write(file.read())
 
-            logging.info(f"Opened a new file at {input_pdf_file}")
+#             logging.info(f"Opened a new file at {input_pdf_file}")
 
 
-            count += 1
+#             count += 1
 
-            logging.info("")
-            logging.info("")
-            logging.info("")
+#             logging.info("")
+#             logging.info("")
+#             logging.info("")
 
-            logging.info(f"Processing application {count}/{number_jobs}")
-            logging.info("")
-            logging.info(f"input_pdf_file={input_pdf_file}")
-            job = processSingleJob(input_pdf_file, task=task, llm=llm)
+#             logging.info(f"Processing application {count}/{number_jobs}")
+#             logging.info("")
+#             logging.info(f"input_pdf_file={input_pdf_file}")
+#             job = processSingleJob(input_pdf_file, task=task, llm=llm)
 
-            # Updating task with success
-            task.save(status="running", message=f"Job {job.role} has been successfully")
-            success += 1
+#             # Updating task with success
+#             task.save(status="running", message=f"Job {job.role} has been successfully")
+#             success += 1
 
  
-        except Exception as e:
-            logging.info(f"We have an error with file. Error={file}")
-            logging.info(f"The Error is {e}")
-            job_failed.append(file)
-            errors.append(e)
-            failed += 1
+#         except Exception as e:
+#             logging.info(f"We have an error with file. Error={file}")
+#             logging.info(f"The Error is {e}")
+#             job_failed.append(file)
+#             errors.append(e)
+#             failed += 1
  
-    content = {"message": f"Finish processing {number_jobs} job descs",
-                "Number of jobs processed successfully": success,
-                "Number of jobs whose processing has failed.": failed,
-                "List of jobs whose processing has failed.": job_failed,
-                "Errors associated to failure": errors}
+#     content = {"message": f"Finish processing {number_jobs} job descs",
+#                 "Number of jobs processed successfully": success,
+#                 "Number of jobs whose processing has failed.": failed,
+#                 "List of jobs whose processing has failed.": job_failed,
+#                 "Errors associated to failure": errors}
 
-    logging.info(f"content")
+#     logging.info(f"content")
 
-    message = f"""Finish processing {number_jobs} job descs. \n 
-    Number of jobs processed successfully: {success} \n 
-    Number of jobs whose processing has failed: {failed} \n 
-    List of jobs whose processing has failed.: {job_failed} \n 
-    Errors associated to failure: {errors} \n """
+#     message = f"""Finish processing {number_jobs} job descs. \n 
+#     Number of jobs processed successfully: {success} \n 
+#     Number of jobs whose processing has failed: {failed} \n 
+#     List of jobs whose processing has failed.: {job_failed} \n 
+#     Errors associated to failure: {errors} \n """
 
-    logging.info("Sending emails ...")
+#     logging.info("Sending emails ...")
 
-    subject = "Processing of your jobs"
-    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
+#     subject = "Processing of your jobs"
+#     sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
 
-    logging.info("Email sent ...")
-    return message
+#     logging.info("Email sent ...")
+#     return message
 
 
 
@@ -358,13 +359,15 @@ def processSingleApplication(msg_file_path, task, llm):
             logging.info("")
             return None
 
-
+        # We extract text from resume
         laparams = LAParams(line_overlap=0.5, detect_vertical=True, all_texts=True)
         text = extract_text(application.pathResume, laparams=laparams)
+        text = nettoyer_texte(text)
         logging.info("")
         logging.info("Content extracted from resume")
         logging.info("")
 
+        # We check the length of extracted text
         if len(text) <=2:
             logging.info("")
             logging.info("")
@@ -453,93 +456,13 @@ def processSingleApplication(msg_file_path, task, llm):
         raise Exception(e)
 
 
-async def processMultipleApplications(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
 
-    # Generating a new task
-    task = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="multiple applications", 
-        date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
-        message="Started processing multiple candidate applications")
+def nettoyer_texte(texte):
+    # Enlever les retours à la ligne inutiles (les conserver uniquement entre les sections)
+    texte = re.sub(r'\n+', '\n', texte)
+    
+    # Enlever les espaces au début et à la fin
+    texte = texte.strip()
 
-    logging.info(f"TaskId = {task.Id}")
+    return texte
 
-    number_applications = len(files)
-    count = 0
-    is_application_already_in_database=0
-    is_application_new_in_database = 0
-    failed = 0
-    failed_list = []
-
-    # We set the llm to use
-    llm = setLLM(llm_type=llm_type)
-    logging.info("")
-    logging.info("")
-    logging.info(f"Using {llm_type} as LLM")
-    logging.info("")
-    logging.info("")
-
-   # We process applications one by one
-    for file in files:
-        msg_file_path = f"media/temp/{file.filename}"
-        logging.info(f"Opening a new file at {msg_file_path}")
-        with open(msg_file_path, "wb") as f:
-            f.write(await file.read())
-
-        logging.info(f"Opened a new file at {msg_file_path}")
-        count += 1
-
-        logging.info("")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-
-        logging.info(f"Processing application {count}/{number_applications}")
-        logging.info("")
-        logging.info("")
-        logging.info("")
-
-        # msg_file_path = email_folder + '/' + email_file
-
-        try:
-            ApplicationData = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
-        except Exception as e:
-            failed += 1
-            error_message = f"Error with file {file}. Error={e}"
-            logging.error(error_message)
-            new_message = error_message + '\n ' +  task.message
-            task.message = new_message + '\n ' +  task.message
-            task.save(status="running", message=new_message)
-            failed_list.append({"file": file, "error": str(e)})
-            
-            continue
-
-
-        if ApplicationData==None:
-            is_application_already_in_database += 1
-        else:
-            is_application_new_in_database += 1
-
-    content = {"message": f"Finish processing {count} applications",
-                "new applications": is_application_new_in_database,
-                "applications in the database": is_application_already_in_database,
-                "number applications failed": failed,
-                "failed application list": failed_list
-    }
-    new_message = "Finish" + '\n ' +  task.message
-    task.message = new_message + '\n ' +  task.message
-    task.save(status="finish", message=new_message)
-
-    message = f"""Finish processing {count} applications. \n 
-    Number of new applications: {is_application_new_in_database} \n 
-    Number of applications already in the database: {is_application_already_in_database} \n 
-    Number applications failed.: {failed} \n 
-    List of applications that failed: {failed_list} \n """
-
-    subject = "Processing of applications"
-    logging.info(f"Sending email at {recipient_email}")
-    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
-    logging.info(f"Sent email at {recipient_email}")
-
-
-
-    return content

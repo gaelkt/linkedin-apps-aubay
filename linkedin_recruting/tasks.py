@@ -11,15 +11,21 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'llm'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
 from chunks import processSingleJob, processMultipleApplications # type: ignore
-from mails import sendEmailGeneral
-from libs import TaskCelery
 from helper import generate_random_date, generate_random_id
 from libs import Application, Job, Task
 from datetime import datetime
 from libs import setLLM
 from dotenv import load_dotenv
 
+from mails import sendEmailGeneral
+
 load_dotenv()
+
+
+
+@app.task
+def process_multiple_applications_task(files, recipient_email, llm_type):
+    return processMultipleApplications(files, recipient_email, llm_type)
 
 
 @app.task
