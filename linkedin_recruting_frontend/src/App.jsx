@@ -114,7 +114,7 @@ function App() {
     try {
 
       setLoadingApps(true);
-      const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}/`, {
+      const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}`, {
         method: "POST",
         headers: {
           accept: "application/json", // L'API attend ce header

@@ -19,11 +19,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'parsing'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'llm'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
+# Configure logging
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.info("Jesus Christ is my Savior")
 
 from utils import langchain_agent, langchain_agent_sql
-
-
-from tasks import processMultipleJobs, processMultipleApplications
+#from chunks import processMultipleApplications
+from tasks import processMultipleApplications, processMultipleJobs
+#from tasks import process_jobs_task, process_multiple_applications_task
 from mysql_functions import refreshDB, getJobs
 from mails import sendEmail
 from mails import sendEmailGeneral
@@ -37,24 +41,19 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
 
-import logging
+
 import sys
 import shutil
 import time
 from celery.result import AsyncResult
 
 
-# logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.info("Jesus Christ is my Savior")
+
+logging.info("Finish")
 
 
 
-
-load_dotenv()
-file_paths = []
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 default_pdf_jobs_folder = os.environ['PDF_JOBS_FOLDER']
@@ -103,19 +102,16 @@ add_routes(
     path="/openai",
 )
 
-model = ChatOpenAI(model="gpt-3.5-turbo-0125")
-prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
-# add_routes(
-#     app,
-#     prompt | model,
-#     path="/joke",
-# )
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.info("Jesus Christ is my Savior")
+
 
 # Endpoint used to setup the database and all tables
 @app.get("/initialization/")
 def initialize_database():
 
     logging.info("Initialzying the database ...")
+    print("Initialzying the database ..")
 
      # We check database, then create database and all required table if they don't exist 
     refreshDB()
@@ -153,57 +149,13 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
     return JSONResponse(content=output, status_code=200)
 
-# Endpoint used to process multiple job and store its requirements in the database
-# Jobs are sent via a POST request
-@app.post("/job/")
-async def multipleJob(files: List[UploadFile] = File(...), 
-                       recipient_email: str = "gkamdemdeteyou@aubay.com",
-                       llm_type: str = os.environ['LLM_TYPE']):
-
-
-    # Checking validity of files
-    validity=True
-    invalid_files = []
-    saved_paths=[]
-    for file in files:
-        if not file.filename.endswith(".pdf"):
-            invalid_files.append(file)
-            validity = False
-            
-        else:
-            #file_path = os.path.join(TEMP_FOLDER, file.filename)
-            file_path = f"media/pdf_job/{file.filename}"
-            logging.info(f"Saving file {file_path}")
-            with open(file_path, "wb") as f:
-                f.write(await file.read())  # Sauvegarde le fichier
-            saved_paths.append(file_path)  # Ajoute le chemin du fichier
-            
-            
-    # At least one file is invalid
-    if validity==False:
-        logging.info(f"file {invalid_files} are not valid pdf files. Please choose files with format .pdf")
-        content = {"message": f"files {invalid_files} are not valid pdf files. Please choose files with format .pdf"}
-        return JSONResponse(content=content, status_code=400)
-    
-    # All job descs are valid
-    # Function processJobs is run asynchronously
-    logging.info("Processing jobs...")
-    #await processJobs(files=files, recipient_email=recipient_email, llm_type = llm_type)
-    
-    
-    
-    logging.info("Sending task to Celery...")
-    task = process_jobs_task.delay(saved_paths, recipient_email, os.environ['LLM_TYPE'])
-
-    content = {"task_id": task.id,"message": f"Processing {len(files)} job descs"}
-
-    return JSONResponse(content=content, status_code=200)
 
 @app.post("/jobs/")
 def multipleJobs(files: List[UploadFile] = File(...), 
                        recipient_email: str = "gkamdemdeteyou@aubay.com",
                        llm_type: str = os.environ['LLM_TYPE'], user: str=os.environ['USER']):
     
+    logging.info("multipleJobs...")
     # Checking validity of files
     validity = True
     invalid_files = []
@@ -231,6 +183,7 @@ def multipleJobs(files: List[UploadFile] = File(...),
     
 
     logging.info("All files saved. Now running asynchronous tasks...")
+    print("All files saved. Now running asynchronous tasks...")
     output = processMultipleJobs.delay(saved_path_jobs, recipient_email, llm_type)
     logging.info("Finish with asynchronous tasks")
     logging.info(f"output={output}")
@@ -240,7 +193,7 @@ def multipleJobs(files: List[UploadFile] = File(...),
     logging.info(f"AsyncResult={result}")
     
 
-    return JSONResponse(content={"message": f"Processing {saved_path_jobs}. ID task: {celery_task_id}."}, status_code=200)
+    return JSONResponse(content={"message": f"Processing__ {saved_path_jobs}. ID task: {celery_task_id}."}, status_code=200)
     
 
 
@@ -337,8 +290,11 @@ async def download_resume(filename: str):
 
     return FileResponse(file_path, filename=filename, media_type="application/pdf")
 
-
 if __name__ == "__main__":
     logging.info("Starting the server")
+    logging.info("Example of logs")
+    logging.info("This is a test")
+    print("ok")
+    logging.info("This is an info message")
 
     uvicorn.run("main:app", host="0.0.0.0", port=8081, reload=True)

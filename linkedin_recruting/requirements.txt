@@ -8,12 +8,10 @@ pytesseract==0.3.13
 nltk==3.9.1
 tesseract==0.1.3
 python-dotenv==1.0.1
-streamlit
 ollama==0.3.2
 langchain-openai==0.2.11
 langchain-community==0.3.5
 langchain-ollama==0.2.0
-streamlit
 mysql-connector-python
 llama-stack
 docx2pdf==0.1.8
@@ -32,4 +30,4 @@ pdfminer.six
 python-multipart
 langchain-google-genai
 google-generativeai
-celery==5.2.0
+celery

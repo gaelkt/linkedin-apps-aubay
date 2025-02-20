@@ -4,8 +4,11 @@ from pydantic import BaseModel # type: ignore
 from langchain_openai import ChatOpenAI # type: ignore
 from langchain.chains import create_sql_query_chain # type: ignore
 from langchain_community.utilities import SQLDatabase # type: ignore
-from langchain.agents import create_sql_agent # type: ignore
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit # type: ignore
+# from langchain.agents import create_sql_agent # type: ignore
+from langchain_community.agent_toolkits.sql.base import create_sql_agent
+
+# from langchain.agents.agent_toolkits import SQLDatabaseToolkit # type: ignore
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from sqlalchemy import create_engine # type: ignore
 from openai import OpenAI # type: ignore
 import pymysql # type: ignore

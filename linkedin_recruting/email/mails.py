@@ -7,7 +7,7 @@ from libs import Application
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+import re
 import smtplib
 import logging
 
@@ -112,6 +112,12 @@ def sendEmail(recipient_email, selection, topN=5):
 
 def sendEmailGeneral(recipient_email, message, subject):
 
+    logging.info(f"Function sendEmailGeneral recipient_email={recipient_email}")
+
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
+
     try:
 
         msg = MIMEMultipart()
@@ -130,3 +136,19 @@ def sendEmailGeneral(recipient_email, message, subject):
     except Exception as e:
         logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
         raise Exception(e)
+
+
+
+def is_valid_email(email: str) -> bool:
+    """
+    Check if the provided email is in a valid format.
+
+    Args:
+        email (str): The email address to validate.
+
+    Returns:
+        bool: True if valid, False otherwise.
+    """
+    # This regex matches most common email patterns.
+    pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+    return re.match(pattern, email) is not None
