@@ -59,6 +59,7 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 default_pdf_jobs_folder = os.environ['PDF_JOBS_FOLDER']
 default_email_folder = os.environ['EMAIL_FOLDER']
 default_resume_folder = os.environ['RESUME_FOLDER']
+default_temp_folder = os.environ['TEMP_FOLDER']
 
 llm_type = os.environ['LLM_TYPE']
 
@@ -74,6 +75,9 @@ if not os.path.exists(default_email_folder):
 # We create pdf job folder if it does not exist
 if not os.path.exists(default_pdf_jobs_folder):
     os.makedirs(default_pdf_jobs_folder)
+# We create temp folder if it does not exist
+if not os.path.exists(default_temp_folder):
+    os.makedirs(default_temp_folder)
 
 
 app = FastAPI(
@@ -85,6 +89,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173", 
     "http://localhost:8081",
+    "http://192.168.71.120:8081",
     "*"  
 ]
 
