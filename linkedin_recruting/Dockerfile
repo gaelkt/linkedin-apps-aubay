@@ -45,6 +45,6 @@ CMD service mysql start && \
     sleep 20 && \
     rabbitmq-server -detached && \
     sleep 20 && \
-    /app/venv/bin/celery -A celery_app worker -Q aubay --loglevel=info & \
+    /app/venv/bin/celery -A celery_app worker --loglevel=info -Q aubay & \
     sleep 20 && \
     /app/venv/bin/python3 main.py
