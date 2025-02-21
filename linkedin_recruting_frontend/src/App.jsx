@@ -4,7 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
-const host = "localhost";
+const host = "192.168.71.120";
 
 function App() {
   
@@ -47,7 +47,7 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-        const response = await fetch(`http://localhost:8081/view_jobs/`);
+        const response = await fetch(`http://192.168.71.120:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
           const jobsList = Object.values(data).map((item) => ({
@@ -73,7 +73,9 @@ function App() {
   const handleInitializeDB = async () => {
     try {
       const response = await fetch(`http://${host}:8081/initialization/`);
-      const result= await response.json()
+      const data= await response.json();
+      const result=data.message;
+      
       
 
       if (response.ok) {
@@ -126,7 +128,8 @@ function App() {
         body: formData,
       });
   
-      const result = await response.json(); // Convertir la réponse en JSON
+      const data = await response.json(); // Convertir la réponse en JSON
+      const result=result.message;
   
       if (response.ok) {
         alert(`${result}`);
@@ -172,7 +175,8 @@ function App() {
         body: formData,
       });
   
-      const result = await response.json(); // Convertir la réponse en JSON
+      const data = await response.json(); // Convertir la réponse en JSON
+      const result=data.message;
   
       if (response.ok) {
         alert(`${result}`);
