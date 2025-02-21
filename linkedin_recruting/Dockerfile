@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-dev \
     mysql-server \
+    rabbitmq-server \
     libmysqlclient-dev \
     build-essential \
     libssl-dev \
@@ -30,9 +31,20 @@ RUN service mysql start && \
     mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';" && \
     mysql -u root -e "FLUSH PRIVILEGES;"
 
+RUN rabbitmq-server -detached && \
+    sleep 10 && \
+    rabbitmqctl add_user aubay aubay && \
+    rabbitmqctl set_user_tags aubay administrator && \
+    rabbitmqctl set_permissions -p / aubay ".*" ".*" ".*" && \
+    rabbitmqctl stop
 
-EXPOSE 8081 3306
+
+EXPOSE 8081 3306 5672 15672
 
 CMD service mysql start && \
+    sleep 20 && \
+    service rabbitmq-server start && \
+    sleep 20 && \
+    /app/venv/bin/celery -A celery_app worker -Q aubay --loglevel=info & \
     sleep 20 && \
     /app/venv/bin/python3 main.py
