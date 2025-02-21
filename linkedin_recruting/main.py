@@ -142,7 +142,7 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
     for role in selection:
         output[role] = [{"name": candidate.name, "score": candidate.score, "date":str(candidate.date),
-        "experience":candidate.experience, "diplome":candidate.diplome, "freelance": "NO", "annee_diplome":candidate.annee_diplome,
+        "experience":candidate.experience, "diplome":candidate.diplome, "freelance": "", "annee_diplome":candidate.annee_diplome,
         "certifications":candidate.certifications, "hard_skills":candidate.hard_skills,
         "soft_skills":candidate.soft_skills, "langues":candidate.langues, "path":candidate.path} for candidate in selection[role]]
 

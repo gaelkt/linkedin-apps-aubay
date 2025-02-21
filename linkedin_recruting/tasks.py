@@ -9,14 +9,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'llm'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 
 from chunks import processSingleJob, processSingleApplication 
-from helper import generate_random_date, generate_random_id
-from libs import Application, Job, Task
+from helper import generate_random_id
+from libs import Task
 from datetime import datetime
 from libs import setLLM
 from dotenv import load_dotenv
 import time
 
-from mails import sendEmailGeneral, computeEmailApplication
+from mails import computeEmailApplication, computeEmailJob
 
 load_dotenv()
 
@@ -30,13 +30,16 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
     logging.info("Started function processMultipleJobs")
 
     # Initializing variables
-    N = len(saved_path_jobs)
-    count = 0
+    number_jobs = len(saved_path_jobs) # Total number of jobs received
+    count = 0   # Number of jobs processed
     success = 0  # number of jobs successfully run
     failure = 0 # number of jobs which failed
-    error_list = [] # list of jobs who failed
+    output_log = []
 
-    logging.info(f"There is = {N} jobs to process")
+    is_job_already_in_database = 0
+    is_job_in_database = 0
+
+    logging.info(f"There is = {number_jobs} jobs to process")
 
     mytask = Task(Id=generate_random_id(), user=os.environ['USER'], task_type="processing_jobs", 
             date=datetime.now().strftime("%Y-%m-%d %H-%M-%S"), status="running", 
@@ -54,19 +57,32 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
         logging.info("")
         logging.info("")
 
-        logging.info(f"Processing job  {count + 1} / {N}")
+        logging.info(f"Processing job  {count + 1} / {number_jobs}")
+
+        # Filename of job description
+        filename = os.path.basename(job_pdf_path)
 
         try:
             job = processSingleJob(job_pdf_path, mytask, llm)
             success += 1
+            current_output_log = {"filename": filename, "status": "success", "description": "New"}
         except Exception as e:
             failure += 1
-            filename = os.path.basename(job_pdf_path)
-            error_list.append({"filename": filename, "error": e})
+            current_output_log = {"filename": filename, "status": "failed", "description": e}
             continue
 
         finally:
             count += 1
+            output_log.append(current_output_log)
+
+
+        if job.diplome == None:
+            is_job_already_in_database += 1
+            current_output_log["description"] = "job already in the database"
+        else:
+            is_job_in_database += 1
+
+        output_log.append(current_output_log)
 
     logging.info("")
     logging.info(f"Finish processing {count} files")
@@ -74,17 +90,18 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
     logging.info("")
     logging.info("Sending email ...")
 
-    # We send email to recipient
-    subject = "Processing of new job descs"
-    message = f"Processing of new jobs ended. Received = {N} Processed = {count} success={success} and failed={failure} logs = {error_list} "
-    
-    logging.info(f"recipient_email={recipient_email}")
-    sendEmailGeneral(recipient_email=recipient_email, message=message, subject=subject)
 
-    logging.info("")
-    logging.info("Email sent !!")
-    
+    logging.info(f"Number of jobs received = {number_jobs}")
+    logging.info(f"Number of jobs processed = {count}")
+    logging.info(f"Number of jobs processed successfully = {success}")
+    logging.info(f"Number of jobs already in database = {is_job_already_in_database}")
 
+
+    logging.info(f"Sending email at {recipient_email}")
+    computeEmailJob(recipient_email=recipient_email, jobs_received=number_jobs, 
+    jobs_processed=count, jobs_success=success, output_log=output_log)
+
+    logging.info(f"Sent email at {recipient_email}")
     return 0
 
 
@@ -139,12 +156,13 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
         logging.info("")
         logging.info("")
 
+        # Filename of candidate application
         filename = os.path.basename(msg_file_path)
 
         try:
             ApplicationData = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
             success += 1
-            current_output_log = {"filename": filename, "status": "success", "description": "Application processed successfully"}
+            current_output_log = {"filename": filename, "status": "success", "description": "New"}
             
         except Exception as e:
             failure += 1
@@ -191,10 +209,15 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
 
 
-    logging.info(f"Sending email at {recipient_email}")
+    
     logging.info(f"Number of applications received = {number_applications}")
     logging.info(f"Number of applications processed = {count}")
-    computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications,applications_processed=count, output_log=output_log)
+    logging.info(f"Number of applications processed successfully = {success}")
+
+    logging.info(f"Sending email at {recipient_email}")
+
+    computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, 
+    applications_processed=count, application_success=success, output_log=output_log)
 
     logging.info(f"Sent email at {recipient_email}")
 
