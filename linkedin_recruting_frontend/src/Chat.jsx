@@ -4,6 +4,7 @@ import axios from 'axios';
 import DataTable from './DataTable';
 import ChartComponent from './ChartComponent2';
 import ChatContainer from './ChatContainer';
+const host = "localhost";
 
 const Dashboard = () => {
   const [query, setQuery] = useState('');
@@ -36,20 +37,20 @@ const Dashboard = () => {
       setLoading(true);
       let response;
       if (requette === 'chat') {
-        response = await axios.get(`http://localhost:8081/agent?query=${encodedQuery}`);
+        response = await axios.get(`http://${host}:8081/agent?query=${encodedQuery}`);
       } else {
-        response = await axios.get(`http://localhost:8081/sql?query=${encodedQuery}`);
+        response = await axios.get(`http://${host}:8081/sql?query=${encodedQuery}`);
       }
       const point = response.data;
       setData(point);
-      setDataUrl(`http://localhost:8081/sql?query=${encodedQuery}`);
+      setDataUrl(`http://${host}:8081/sql?query=${encodedQuery}`);
 
       const currentQuery = {
         type: requette,
         query: query,
         data: requette === 'table' ? point : null,
         chartType: requette === 'chart' ? chart : null,
-        dataUrl: requette === 'chart' ? `http://localhost:8081/sql?query=${encodedQuery}` : null,
+        dataUrl: requette === 'chart' ? `http://${host}:8081/sql?query=${encodedQuery}` : null,
         response: requette === 'chat' ? point : null,
       };
 
