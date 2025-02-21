@@ -98,8 +98,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
 
 
     logging.info(f"Sending email at {recipient_email}")
-    computeEmailJob(recipient_email=recipient_email, jobs_received=number_jobs, 
-    jobs_processed=count, jobs_success=success, output_log=output_log)
+    # computeEmailJob(recipient_email=recipient_email, jobs_received=number_jobs, jobs_processed=count, jobs_success=success, output_log=output_log)
 
     logging.info(f"Sent email at {recipient_email}")
     return 0
@@ -216,8 +215,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
     logging.info(f"Sending email at {recipient_email}")
 
-    computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, 
-    applications_processed=count, application_success=success, output_log=output_log)
+    # computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
 
     logging.info(f"Sent email at {recipient_email}")
 
