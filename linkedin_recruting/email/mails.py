@@ -136,28 +136,76 @@ def sendEmailGeneral(recipient_email, message, subject):
     except Exception as e:
         logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
         raise Exception(e)
+    
 
-def sendEmailApplication(recipient_email=recipient_email, applications_received=number_applications,
-    applications_processed=count, output_log=output_log):
+def computeEmailApplication(recipient_email:str, applications_received:int,
+    applications_processed:int, application_success:int, output_log):
 
+
+    logging.info(f"Function computeEmailApplication recipient_email={recipient_email}")
+    
+    subject = f"Automated report for the processing of {applications_received} application(s)"
+
+    logging.info(f"Subject of email={subject}")
+    
+    email_content_html = f"""
+    <html>
+    <head>
+        <style>
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+            }}
+            table, th, td {{
+                border: 1px solid black;
+            }}
+            th, td {{
+                padding: 10px;
+                text-align: left;
+            }}
+        </style>
+    </head>
+    <body>
+        <p><strong>Subject:</strong> Automated Job Application Processing Report</p>
+        <p>Dear HR Team,</p>
+        <p>I hope this message finds you well.</p>
+        <p>Please find below an automated report for today’s job application processing:</p>
+        <ul>
+            <li><strong>Total number of applications received :</strong> {applications_received}</li>
+            <li><strong>Number of applications processed:</strong> {applications_processed}</li>
+            <li><strong>Number of applications processed successfully:</strong> {application_success}</li>
+        </ul>
+        <p>Below is a summary of the processed applications:</p>
+        <table>
+           <thead>
+              <tr>
+                 <th>Filename</th>
+                 <th>Status</th>
+                 <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+            
+            """
+    for log in output_log:
+        email_content_html += f"""
+            <tr>
+                <td>{log['filename']}</td>
+                <td>{log['status']}</td>
+                <td>{log['description']}</td>
+            </tr>
+        """
+    email_content_html += f"""
+    
+            </tbody>
+            
+        </table>
+        <p>Please review any failed applications and take the necessary actions.</p>
+        <p>Thank you for your attention to this matter.</p>
+        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+    </body>
+    </html>
     """
-    Send an email when all candidate applications are processed
-
-    Inputs:
-        - recipient_email(str): email of the recipient
-        - applications_received(int): Number of applications received for processing
-        - applications_processed(int): Number of applications actually processed
-        - output_log(list): logs for each application. Each element is a dict with the keys:
-            * "filename": application sent for processing
-            * "status": result of the process ("success" or "failed")
-            * "description": raison for failure
-       
-
-    Output
-
-    """
-
-    logging.info(f"Function sendEmailGeneral recipient_email={recipient_email}")
 
     # Check if the email is valid or not
     if not is_valid_email(recipient_email):
@@ -167,12 +215,13 @@ def sendEmailApplication(recipient_email=recipient_email, applications_received=
     try:
     
     # Edit this part to have an HTML email with a body
+        
 
         msg = MIMEMultipart()
         msg['From'] = "gaelkamdem@yahoo.fr"
         msg['To'] = recipient_email
         msg['Subject'] = subject
-        msg.attach(MIMEText(message, 'html'))
+        msg.attach(MIMEText(email_content_html, 'html'))
 
         # Connexion au serveur SMTP Yahoo
         server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
@@ -182,8 +231,110 @@ def sendEmailApplication(recipient_email=recipient_email, applications_received=
         server.quit()
 
     except Exception as e:
-        logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
+        logging.info(f"Impossible to send email in function computeEmailApplication. Error = {e}")
         raise Exception(e)
+    
+    
+
+
+def computeEmailJob(recipient_email:str, jobs_received:int,
+    jobs_processed:int, jobs_success:int, output_log):
+
+
+    logging.info(f"Function computeEmailJob recipient_email={recipient_email}")
+    
+    subject = f"Automated report for the processing of {jobs_received} job desc(s)"
+
+    logging.info(f"Subject of email={subject}")
+    
+    email_content_html = f"""
+    <html>
+    <head>
+        <style>
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+            }}
+            table, th, td {{
+                border: 1px solid black;
+            }}
+            th, td {{
+                padding: 10px;
+                text-align: left;
+            }}
+        </style>
+    </head>
+    <body>
+        <p>Dear HR Team,</p>
+        <p>I hope this message finds you well.</p>
+        <p>Please find below an automated report for today’s job desc processing:</p>
+        <ul>
+            <li><strong>Total number of job descs received :</strong> {jobs_received}</li>
+            <li><strong>Number of job descs processed:</strong> {jobs_processed}</li>
+            <li><strong>Number of job descs processed successfully:</strong> {jobs_success}</li>
+        </ul>
+        <p>Below is a summary of the processed job descs:</p>
+        <table>
+           <thead>
+              <tr>
+                 <th>Filename</th>
+                 <th>Status</th>
+                 <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+            
+            """
+    for log in output_log:
+        email_content_html += f"""
+            <tr>
+                <td>{log['filename']}</td>
+                <td>{log['status']}</td>
+                <td>{log['description']}</td>
+            </tr>
+        """
+    email_content_html += f"""
+    
+            </tbody>
+            
+        </table>
+        <p>Please review any failed job descs and take the necessary actions.</p>
+        <p>Thank you for your attention to this matter.</p>
+        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+    </body>
+    </html>
+    """
+
+    # Check if the email is valid or not
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
+
+    try:
+    
+    # Edit this part to have an HTML email with a body
+        
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(email_content_html, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function computeEmailJob. Error = {e}")
+        raise Exception(e)
+    
+    
+
+
 
 def is_valid_email(email: str) -> bool:
     """

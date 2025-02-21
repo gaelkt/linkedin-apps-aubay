@@ -73,9 +73,11 @@ function App() {
   const handleInitializeDB = async () => {
     try {
       const response = await fetch(`http://${host}:8081/initialization/`);
+      const result= await response.json()
+      
 
       if (response.ok) {
-        alert('Base de données initialisée avec succès!');
+        alert(`${result}`);
       } else {
         alert('Erreur lors de l\'initialisation de la base de données.');
       }
@@ -127,19 +129,19 @@ function App() {
       const result = await response.json(); // Convertir la réponse en JSON
   
       if (response.ok) {
-        alert(`Applications succcessfully added !`);
+        alert(`${result}`);
         
         if (result["number of failed"] > 0) {
           console.warn("Apps échoués :");
           console.warn("Erreurs :");
         }
       } else {
-        alert("❌ Une erreur est survenue lors du traitement des Applications.");
+        alert(`${result}`);
         console.error("Réponse API :", result);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      alert("❌ Une erreur réseau est survenue.");
+      alert(`${error}`);
     }finally {
       setLoadingApps(false);
     }
@@ -173,19 +175,19 @@ function App() {
       const result = await response.json(); // Convertir la réponse en JSON
   
       if (response.ok) {
-        alert(`Jobs succcessfully added !`);
+        alert(`${result}`);
         
         if (result["number of failed"] > 0) {
           console.warn("Jobs échoués :");
           console.warn("Erreurs :");
         }
       } else {
-        alert("❌ Une erreur est survenue lors du traitement des jobs.");
+        alert(`${result}`);
         console.error("Réponse API :", result);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      alert("❌ Une erreur réseau est survenue.");
+      alert(`${error}`);
     }finally{
       setLoadingJobs(false);
     }
