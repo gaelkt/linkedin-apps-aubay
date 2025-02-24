@@ -195,9 +195,7 @@ def multipleJobs(files: List[UploadFile] = File(...),
     logging.info(f"output={output}")
     celery_task_id = output.id
     logging.info(f"Task ID={celery_task_id}")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
-    
+
 
     return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job descs. ID task: {celery_task_id}."}, status_code=200)
     
@@ -242,10 +240,6 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     logging.info(f"output={output}")
     celery_task_id = output.id
     logging.info(f"Task ID={celery_task_id}")
-
-    logging.info("before result")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
 
     return JSONResponse(content={"message": f"Processing {len(saved_path_applications)} applications. ID task: {celery_task_id}."}, status_code=200)
 

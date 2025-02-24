@@ -41,7 +41,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
       c_reel = 0
 
       is_job_already_in_database = 0
-      is_job_in_database = 0
+      numbers_jobs_in_database = 0
 
       logging.info(f"There is = {number_jobs} jobs to process")
 
@@ -67,7 +67,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
         filename = os.path.basename(job_pdf_path)
 
         try:
-            job = processSingleJob(job_pdf_path, mytask, llm)
+            job, is_job_already_in_database = processSingleJob(job_pdf_path, mytask, llm)
             success += 1
             current_output_log = {"filename": filename, "status": "success", "description": "New"}
         except Exception as e:
@@ -78,23 +78,25 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
         finally:
             count += 1
             output_log.append(current_output_log)
-            logging.info("--------------------------------------------")
-            logging.info("Waiting for 30 seconds")
-            logging.info("--------------------------------------------")
-            time.sleep(25)
 
+            # We have an old job that has not been processed with LLM
+            if is_job_already_in_database:
+                numbers_jobs_in_database += 1
+                current_output_log["description"] = "job already in the database"
+                logging.info("")
+                logging.info("Job already in the database")
+            
+            # We have a new job that has been processed with LLM
+            # We add 30s to avoid quota from Gemini
+            else:
+                logging.info("--------------------------------------------")
+                logging.info("Waiting for 30 seconds")
+                logging.info("--------------------------------------------")
+                time.sleep(25)
 
+            output_log.append(current_output_log)
 
-
-        if job.diplome == None:
-            is_job_already_in_database += 1
-            current_output_log["description"] = "job already in the database"
-        else:
-            is_job_in_database += 1
-            c_reel += 1
-
-        output_log.append(current_output_log)
-
+                
       logging.info("")
       logging.info(f"Finish processing {count} files")
 
@@ -105,7 +107,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
       logging.info(f"Number of jobs received = {number_jobs}")
       logging.info(f"Number of jobs processed = {count}")
       logging.info(f"Number of jobs processed successfully = {success}")
-      logging.info(f"Number of jobs already in database = {is_job_already_in_database}")
+      logging.info(f"Number of jobs already in database = {numbers_jobs_in_database}")
 
 
       logging.info(f"Sending email at {recipient_email}")
@@ -137,8 +139,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
       output_log = []
 
-      is_application_already_in_database=0
-      is_application_new_in_database = 0
+      number_new_applications = 0
 
 
 
@@ -172,7 +173,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
           filename = os.path.basename(msg_file_path)
 
           try:
-              ApplicationData = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
+              application = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
               success += 1
               current_output_log = {"filename": filename, "status": "success", "description": "New"}
             
@@ -192,22 +193,24 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
               continue
           finally:
               count += 1
-              logging.info("--------------------------------------------")
-              logging.info("Waiting for 30 seconds")
-              logging.info("--------------------------------------------")
-              time.sleep(30)
 
-
-          if ApplicationData==None:
-              is_application_already_in_database += 1
+          # We have an old application, we don't wait for 30s
+          if application.isApplicationOld:
               current_output_log["description"] = "Application already in the database"
+              logging.info(f"Candidate {application.name} has already applied to {application.role} position.")
+
+        # We have a new application. We will wait for 30s
           else:
-              is_application_new_in_database += 1
-              c_reel += 1
+              number_new_applications += 1
+              if count < number_applications:
+                logging.info("--------------------------------------------")
+                logging.info(f"Waiting for 25 seconds to start application {count+1}/{number_applications}")
+                logging.info("--------------------------------------------")
+                time.sleep(25)
 
           output_log.append(current_output_log)
 
-
+        # Saving task
       new_message = "Finish" + '\n ' +  task.message
       task.message = new_message + '\n ' +  task.message
       task.save(status="finish", message=new_message)

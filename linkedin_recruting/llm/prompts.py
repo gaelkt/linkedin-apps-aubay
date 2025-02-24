@@ -171,7 +171,6 @@ def extractDiplomeCandidat(context, llm):
     return output_diplome["diplome"]
 
 def extractExperienceCandidat(context, llm):
-    from langchain.chat_models import ChatOpenAI
     from langchain.prompts import ChatPromptTemplate
     logging.info("Calculating Candidate Diplome, Annee et Experience")
 

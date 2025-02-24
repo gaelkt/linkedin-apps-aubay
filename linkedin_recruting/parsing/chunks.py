@@ -98,7 +98,7 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
 
     else:
         logging.info(f"...............=>Job {job.role} is already in the database with roleID = {job.roleId}")
-        return job
+        return job, True
 
         
     # Extract chunk 
@@ -137,7 +137,7 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
     job.save()
     logging.info(f"...............=>Saved job {job.role}")
 
-    return job
+    return job, False
 
     
 # def processJobs(files, recipient_email: str, llm_type: str = os.environ['LLM_TYPE']):
@@ -358,7 +358,10 @@ def processSingleApplication(msg_file_path, task, llm):
             logging.info("")
             logging.info(f"Candidate {application.name} has already applied to {application.role} position.")
             logging.info("")
-            return None
+            return application 
+  
+
+        application.isApplicationOld = False
 
         # We extract text from resume
         laparams = LAParams(line_overlap=0.5, detect_vertical=True, all_texts=True)
@@ -378,10 +381,19 @@ def processSingleApplication(msg_file_path, task, llm):
 
 
         # Getting email, freelance status
-        application.email = extractEmail(text)[0]
+        email = extractEmail(text)
+
+        if len(email) >= 1:
+            application.email = email[0]
+        else:
+            logging.info("")
+            logging.info("No email found")
+            application.email = None
 
         if isFreelance(text):
             application.freelance = "Yes"
+            logging.info("")
+            logging.info("We got a freelance !")
         else:
             application.freelance = "NO"
         logging.info("")

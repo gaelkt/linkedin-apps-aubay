@@ -456,13 +456,68 @@ def convert_word_2_pdf(word_path, pdf_path):
     try:
         
         if not os.path.isfile(word_path):
-            print(f"The word document does not exist {word_path}")
+            logging.info(f"The word document does not exist {word_path}")
             raise Exception("Word document does not exists")
-        convert(word_path, pdf_path)
+
+        if pdf_path == None:
+            logging.info("Output pdf can not be none in function convert_word_2_pdf")
+            raise Exception("Output pdf can not be none in function convert_word_2_pdf")
+        
+        # Windows platform
+        if os.environ['PLATFORM'] == "windows":
+            convert(word_path, pdf_path)
+
+        # Linux platform
+        else:
+            convert_word_2_pdf_linux(word_path, pdf_path)
         
     except Exception as e:
-        print(e)
+        logging.info("Unable to convert doc to pdf")
+        logging.error(e)
         raise Exception(e)
+
+
+
+
+def convert_word_2_pdf_linux(input_file, output_file):
+    import subprocess
+    import sys
+
+    # Check if the input file exists
+    if not os.path.exists(input_file):
+        logging.error(f"Error: Input Word File '{input_file}' does not exist.")
+        raise Exception(f"Error: Input Word File '{input_file}' does not exist.")
+
+    # Determine the output directory based on the input file's location
+    output_dir = os.path.dirname(os.path.abspath(input_file))
+    
+    # If no output file name is provided, create one by replacing the extension with .pdf
+    if not output_file:
+        logging.error(f"Error: Output PDF File '{input_file}'needs to be given.")
+        raise Exception(f"Error: Output PDF File '{input_file}' needs to be given.")
+    
+    # Build the command: use LibreOffice's headless conversion
+    command = [
+        'libreoffice',
+        '--headless',
+        '--convert-to', 'pdf',
+        input_file,
+        '--outdir', output_dir
+    ]
+    
+    logging.info("")
+    logging.info(f"Converting '{input_file}' to PDF...")
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    if result.returncode != 0:
+        logging.info("Error converting file:")
+        logging.info(result.stderr)
+        raise Exception(f"Impossible to convert word to pdf. Error = {result.stderr}")
+    else:
+        logging.info("")
+        logging.info(f"Conversion successful! PDF saved as '{output_file}'.")
+
+    return 0
 
 
 def value_diplome(diplome):
