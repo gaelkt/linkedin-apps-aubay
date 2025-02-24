@@ -4,11 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
-<<<<<<< HEAD
-const host = "localhost";
-=======
 //const host = "localhost";
->>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
 
 function App() {
   
@@ -53,10 +49,7 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-<<<<<<< HEAD
-=======
         console.log("L'URL de l'API est :", host);
->>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
         const response = await fetch(`http://${host}:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
@@ -136,34 +129,21 @@ function App() {
         body: formData,
       });
   
-<<<<<<< HEAD
-      const result = await response.json(); // Convertir la réponse en JSON
-      
-      //const result=result.message;
-      console.log("on a recuprerer le resultat de la requette on va la traiter")
-      
-=======
       const data = await response.json(); // Convertir la réponse en JSON
       const result=data.message;
       console.log("------------------------------");
       console.log(result);
->>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
   
       if (response.ok) {
-        //alert(`${result}`);
-        console.log("statut ok")
-        console.log(response.json())
-        alert("Application successfull processing")
+        alert(`${result}`);
         
       } else {
-        // alert(`${result}`);
-        alert("error")
-        console.error("Réponse API :", data);
+        alert(`${result}`);
+        console.error("Réponse API :", result);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      // alert(`${error}`);
-      alert("Erreur lors de la requête")
+      alert(`${error}`);
     }finally {
       setLoadingApps(false);
     }
