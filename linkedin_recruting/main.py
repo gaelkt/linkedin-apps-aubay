@@ -147,7 +147,8 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
     for role in selection:
         output[role] = [{"name": candidate.name, "score": candidate.score, "date":str(candidate.date),
-        "experience":candidate.experience, "diplome":candidate.diplome, "freelance": "", "annee_diplome":candidate.annee_diplome,
+        "experience":candidate.experience, "diplome":candidate.diplome, "annee_diplome":candidate.annee_diplome,
+        "email":candidate.email, "phone":candidate.phone, "freelance": candidate.freelance,
         "certifications":candidate.certifications, "hard_skills":candidate.hard_skills,
         "soft_skills":candidate.soft_skills, "langues":candidate.langues, "path":candidate.path} for candidate in selection[role]]
 
@@ -198,7 +199,7 @@ def multipleJobs(files: List[UploadFile] = File(...),
     logging.info(f"AsyncResult={result}")
     
 
-    return JSONResponse(content={"message": f"Processing__ {saved_path_jobs} job descs. ID task: {celery_task_id}."}, status_code=200)
+    return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job descs. ID task: {celery_task_id}."}, status_code=200)
     
 
 

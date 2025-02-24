@@ -233,6 +233,7 @@ class Job:
 class Application:
     def __init__(self, msg_file_path=None, Id=None, roleId=None, name=None,
     role=None, date=None, score=None, experience=None, diplome=None, annee_diplome=None,
+    email=None, phone=None, freelance=None,
     alternative_score=None, alternative_role=None, certifications=None,
     hard_skills=None, soft_skills=None, langues=None, path=None):
 
@@ -246,6 +247,9 @@ class Application:
             self.experience = experience
             self.diplome = diplome
             self.annee_diplome = annee_diplome
+            self.email = email
+            self.phone = phone
+            self.freelance = freelance
             self.alternative_score = alternative_score
             self.alternative_role = alternative_role
             self.certifications = certifications
@@ -398,8 +402,8 @@ class Application:
         table_applications = os.environ['DB_TABLE_APPLICATIONS']
 
         insert_query = f"""
-    INSERT INTO {table_applications} (score, Id, roleId, date,  name, role, experience, diplome, annee_diplome, certifications, hard_skills, soft_skills, langues, alternative_role, alternative_score, path) 
-    VALUES (:score, :Id, :roleId, :date, :name, :role, :experience, :diplome, :annee_diplome, :certifications, :hard_skills, :soft_skills, :langues, :alternative_role, :alternative_score, :path);
+    INSERT INTO {table_applications} (score, Id, roleId, date,  name, role, experience, diplome, annee_diplome, email, phone, freelance, certifications, hard_skills, soft_skills, langues, alternative_role, alternative_score, path) 
+    VALUES (:score, :Id, :roleId, :date, :name, :role, :experience, :diplome, :annee_diplome, :email, :phone, :freelance, :certifications, :hard_skills, :soft_skills, :langues, :alternative_role, :alternative_score, :path);
     """
 
         # Define the values to insert
@@ -413,6 +417,9 @@ class Application:
         "experience": self.experience,
         "diplome": self.diplome,
         "annee_diplome": self.annee_diplome,
+        "email": self.email,
+        "phone": self.phone,
+        "freelance": self.freelance,
         "certifications": str(self.certifications),
         "hard_skills": str(self.hard_skills),
         "soft_skills": str(self.soft_skills),
@@ -517,6 +524,7 @@ def selectApplication(roles, begin_date, end_date):
         for result in results:
             application = Application(name=result['name'], score=result['score'],
             experience=result['experience'], date=result['date'], diplome=result['diplome'], annee_diplome=result['annee_diplome'],
+            email=result['email'], phone=result['phone'], freelance=result['freelance'],
             path=result['path'], certifications=result['certifications'], hard_skills=result['hard_skills'],
             soft_skills=result['soft_skills'], langues=result['langues'])
             applications_list.append(application)

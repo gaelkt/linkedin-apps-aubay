@@ -78,6 +78,16 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
             count += 1
             output_log.append(current_output_log)
 
+            # We wait one minute before continuing to avoid the quota limit of Gemini
+            if count % 4 == 0:
+                logging.info("")
+                logging.info("")
+                logging.info("")
+                logging.info("--------------------------------------------")
+                logging.info("Waiting for one minute")
+                logging.info("--------------------------------------------")
+                time.sleep(65)
+
 
         if job.diplome == None:
             is_job_already_in_database += 1
@@ -146,15 +156,11 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
       logging.info("")
       logging.info(f"Using {llm_type} as LLM")
       logging.info("")
-      logging.info("")
 
      # We process applications one by one
       for msg_file_path in saved_path_applications:
 
        
-          logging.info("")
-          logging.info("")
-          logging.info("")
           logging.info("")
           logging.info("")
 
@@ -223,9 +229,9 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
       logging.info(f"Sending email at {recipient_email}")
 
-      # computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
-
-      logging.info(f"Sent email at {recipient_email}")
+      if os.environ['SEND_EMAIL']:
+        computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
+        logging.info(f"Sent email at {recipient_email}")
       
     except Exception as e:
         logging.error(e)

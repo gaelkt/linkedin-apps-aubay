@@ -16,6 +16,7 @@ from langchain_community.document_loaders import PyMuPDFLoader
 from PyPDF2 import PdfReader
 
 from helper import generate_random_date, generate_random_id
+from helper import isFreelance, extractEmail, anonymizeResume
 from datetime import datetime
 
 from libs import setLLM
@@ -37,7 +38,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../email'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../mysqldb'))
 
 from mails import sendEmailGeneral
-from prompts import extractExperienceCandidat, extractDiplomeCandidat, extractHardSkillsCandidat, extractCertificationsCandidat
+from prompts import extractExperienceCandidat, extractDiplomeCandidat, extractHardSkillsCandidat, extractCertificationsCandidat, extractPhoneCandidat
 from prompts import extractExperienceRequired, extractDiplomeRequired, extractHardSkillsRequired, extractCertificationsRequired
 
 import logging
@@ -367,6 +368,7 @@ def processSingleApplication(msg_file_path, task, llm):
         logging.info("Content extracted from resume")
         logging.info("")
 
+
         # We check the length of extracted text
         if len(text) <=2:
             logging.info("")
@@ -374,23 +376,43 @@ def processSingleApplication(msg_file_path, task, llm):
             logging.info(f"Error in function processApplication. Unable to extract data from the resume of {application.name}. Check the pdf resume of the applicant")
             raise Exception(f"Error in function processApplication. Unable to extract data from the resume of {application.name}. Check the pdf resume of the applicant")
 
+
+        # Getting email, freelance status
+        application.email = extractEmail(text)[0]
+
+        if isFreelance(text):
+            application.freelance = "Yes"
+        else:
+            application.freelance = "NO"
+        logging.info("")
+        logging.info(f"email={application.email} and freelance={application.freelance}")
+
+        anonymised_resume = anonymizeResume(fullname=application.name, resume=text)
+
+        # Extracting phone number
+        logging.info("")
+        logging.info("Extracting diplome ...")
+        phone = extractPhoneCandidat(anonymised_resume, llm=llm)
+        logging.info(f"phone={phone}")
+        application.phone = phone
+
         # Extracting diplome
         logging.info("")
         logging.info("Extracting diplome ...")
-        diplome = extractDiplomeCandidat(text, llm=llm)
+        diplome = extractDiplomeCandidat(anonymised_resume, llm=llm)
         logging.info(f"diplome={diplome}")
         application.diplome = diplome
 
         # Extracting experience
         logging.info("")
         logging.info("Extracting experience ...")
-        application.annee_diplome, application.experience = extractExperienceCandidat(text, llm=llm)
+        application.annee_diplome, application.experience = extractExperienceCandidat(anonymised_resume, llm=llm)
         logging.info(f"Candidate diplome={application.diplome} Candidate graduation={application.annee_diplome} Candidate experience={application.experience} .")
 
          # Extracting experience
         logging.info("")
         logging.info("Extracting hard skills ...")
-        application.hard_skills = extractHardSkillsCandidat(text, llm=llm)
+        application.hard_skills = extractHardSkillsCandidat(anonymised_resume, llm=llm)
         logging.info(f"Candidate hard skills={application.hard_skills} .")
         
 

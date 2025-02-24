@@ -11,7 +11,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('settings');
   const [role, setRole] = useState('');
   const [startDate, setStartDate] = useState('2024-10-01');
-  const [endDate, setEndDate] = useState('2024-10-31');
+  const [endDate, setEndDate] = useState('2025-03-30');
   const [filteredData, setFilteredData] = useState([]);
   const [rolesList, setRolesList] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -432,13 +432,16 @@ function App() {
 
             <table className="table table-striped">
               <thead style={{ backgroundColor: 'red', color: 'white' }}>
-                <tr>
+                <tr style={{ fontSize: "13px" }}>
                   <th>Name</th>
                   <th>Date</th>
                   <th>Score</th>
                   <th>Freelance</th>
                   <th>Experience</th>
                   <th>Degree</th>
+                  <th>Year</th>
+                  <th>Phone</th>
+                  <th>Email</th>
                   <th>Hard Skills</th>
                   <th>Resume</th>
                   
@@ -451,14 +454,17 @@ function App() {
       const downloadUrl = `http://${host}:8081/download/resume/${encodeURIComponent(item.path.split("/").pop())}`;
 
       return (
-        <tr key={index}>
-          <td>{item.name}</td>
+        <tr key={index} style={{ fontSize: "13px" }}>
+          <td >{item.name}</td>
           <td>{item.date}</td>
-          <td>{item.score}</td>
+          <td>{item.score}</td>   
           <td>{item.freelance}</td>
           <td>{item.experience}</td>
           <td>{item.diplome}</td>
-          <td style={{ fontSize: "13px" }}>{item.hard_skills}</td>
+          <td>{item.annee_diplome}</td>
+          <td style={{ fontSize: "12px" }}>{item.phone}</td>
+          <td>{item.email}</td>
+          <td style={{ fontSize: "10px" }}>{item.hard_skills}</td>
           <td>
             <a 
               href={downloadUrl} 

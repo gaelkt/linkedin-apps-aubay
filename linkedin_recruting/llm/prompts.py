@@ -115,8 +115,30 @@ def extractCertificationsRequired(context, llm):
     return output_certifications["certifications"]
 
 
+def extractPhoneCandidat(context, llm):
+
+    from templates import prompt_template_phone_candidat
+
+    class Phone(BaseModel):
+        phone: str = Field(description="numero du candidat")
+    parser_phone = JsonOutputParser(pydantic_object=Phone)  
+
+    json_structure_phone = {
+        "phone": '<votre_réponse>'
+    }
+
+    prompt = PromptTemplate(template=prompt_template_phone_candidat, input_variables=["context"], 
+        json_structure=json_structure_phone,
+        partial_variables={"format_instructions": parser_phone.get_format_instructions()})
+
+    chain = prompt | llm | parser_phone
+
+    output_phone = chain.invoke({"context": context})
 
 
+    logging.info(f"output_phone={output_phone}")
+
+    return output_phone["phone"]
 
 
 

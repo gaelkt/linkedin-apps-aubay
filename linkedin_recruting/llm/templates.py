@@ -35,6 +35,25 @@ prompt_template_diplome_requis = """
 
     """ 
 
+prompt_template_phone_candidat = """
+
+    Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni ci-dessous dans le contexte, ta mission est d'extraire le numéro de téléphone en incluant l'indicatif s'il est mentionnée, sans fournir d'explications ou d'autres textes supplémentaires.
+    
+    ### Instructions :
+    Extrait le numéro de téléphone en respectant les règles suivantes :
+
+    - Inclure l'indicatif s'il est mentionné dans le contexte
+    - Ta réponse doit obligatoirement être au format JSON suivant contenant la clé "phone"
+    - Voici un exemple:
+    {{"phone": "+33 6 51 83 04 52"}}
+
+    {format_instructions}
+    Context: {context}
+
+    Ne pas  fournir d'explications ou d'autres commentaires supplémentaires
+
+    """ 
+
 
 prompt_template_experience_requise = """
     
