@@ -4,7 +4,7 @@ import axios from 'axios';
 import DataTable from './DataTable';
 import ChartComponent from './ChartComponent2';
 import ChatContainer from './ChatContainer';
-const host = "192.168.71.120";
+
 
 const Dashboard = () => {
   const [query, setQuery] = useState('');
@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [dataUrl, setDataUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef(null);
+
+  const host = import.meta.env.VITE_HOST;
 
   useEffect(() => {
     if (chatContainerRef.current) {

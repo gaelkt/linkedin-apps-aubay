@@ -4,7 +4,11 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
+<<<<<<< HEAD
 const host = "localhost";
+=======
+//const host = "localhost";
+>>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
 
 function App() {
   
@@ -25,6 +29,8 @@ function App() {
   const [selectedApplication, setSelectedApplication] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false); // Déclarez l'état loading
   const [loadingApps, setLoadingApps] = useState(false); // Déclarez l'état loading
+  
+  const host = import.meta.env.VITE_HOST;
 
 
 
@@ -47,6 +53,10 @@ function App() {
 
     const fetchJobs = async () => {
       try {
+<<<<<<< HEAD
+=======
+        console.log("L'URL de l'API est :", host);
+>>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
         const response = await fetch(`http://${host}:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
@@ -121,18 +131,23 @@ function App() {
       const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}`, {
         method: "POST",
         headers: {
-          accept: "application/json", // L'API attend ce header
-          // ⚠️ Ne pas ajouter 'Content-Type': 'multipart/form-data'
-          // Fetch l'ajoute automatiquement avec le bon boundary
+          accept: "application/json", 
         },
         body: formData,
       });
   
+<<<<<<< HEAD
       const result = await response.json(); // Convertir la réponse en JSON
       
       //const result=result.message;
       console.log("on a recuprerer le resultat de la requette on va la traiter")
       
+=======
+      const data = await response.json(); // Convertir la réponse en JSON
+      const result=data.message;
+      console.log("------------------------------");
+      console.log(result);
+>>>>>>> 972f5bf66942d4d8683602ca75ff365fcabd82a3
   
       if (response.ok) {
         //alert(`${result}`);
@@ -181,6 +196,8 @@ function App() {
   
       const data = await response.json(); // Convertir la réponse en JSON
       const result=data.message;
+      console.log("------------------------------");
+      console.log(result);
   
       if (response.ok) {
         alert(`${result}`);
