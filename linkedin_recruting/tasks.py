@@ -38,6 +38,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
       success = 0  # number of jobs successfully run
       failure = 0 # number of jobs which failed
       output_log = []
+      c_reel = 0
 
       is_job_already_in_database = 0
       is_job_in_database = 0
@@ -79,7 +80,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
             output_log.append(current_output_log)
 
             # We wait one minute before continuing to avoid the quota limit of Gemini
-            if count % 4 == 0:
+            if (c_reel+1) % 4 == 0:
                 logging.info("")
                 logging.info("")
                 logging.info("")
@@ -94,6 +95,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
             current_output_log["description"] = "job already in the database"
         else:
             is_job_in_database += 1
+            c_reel += 1
 
         output_log.append(current_output_log)
 
@@ -135,6 +137,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
       success = 0  # Number of applications processed successfully
       failure = 0 # Number of applications processed with an error
       error_list = [] # List of applications which failed
+      c_reel = 0
 
       output_log = []
 
@@ -195,7 +198,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
               count += 1
 
               # We wait one minute before continuing to avoid the quota limit of Gemini
-              if count % 3 == 0:
+              if (c_reel + 1) % 3 == 0:
                   logging.info("")
                   logging.info("")
                   logging.info("")
@@ -211,6 +214,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
               current_output_log["description"] = "Application already in the database"
           else:
               is_application_new_in_database += 1
+              c_reel += 1
 
           output_log.append(current_output_log)
 
@@ -231,7 +235,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
       logging.info(f"Preparing to send email at {recipient_email}")
       logging.info("")
 
-      if os.environ['SEND_EMAIL']:
+      if os.environ['SEND_EMAIL']==True:
         computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
         logging.info(f"Sent email at {recipient_email}")
     
