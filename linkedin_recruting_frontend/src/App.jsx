@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
+import JobComponent from './JobComponent';
 //const host = "localhost";
 
 function App() {
@@ -25,6 +26,8 @@ function App() {
   const [selectedApplication, setSelectedApplication] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false); // Déclarez l'état loading
   const [loadingApps, setLoadingApps] = useState(false); // Déclarez l'état loading
+  const [refreshJobs, setRefreshJobs] = useState(0);
+  
   
   const host = import.meta.env.VITE_HOST;
 
@@ -72,6 +75,18 @@ function App() {
     fetchRoles();
     fetchJobs();
   }, []);
+
+
+  const handleOpenPositionsClick = () => {
+    // On active l'onglet et on met à jour le state pour forcer le rafraîchissement
+    setActiveTab('view-job');
+    setRefreshJobs(Date.now()); // Utilisation d'un timestamp unique
+  };
+
+
+ 
+
+
 
   const handleInitializeDB = async () => {
     try {
@@ -280,7 +295,7 @@ function App() {
           <button 
             className={`nav-link ${activeTab === 'view-job' ? 'active' : ''}`} 
             style={{ color: activeTab === 'view-job' ? 'white' : 'red', backgroundColor: activeTab === 'view-job' ? 'red' : 'white' }}
-            onClick={() => setActiveTab('view-job')}
+            onClick={handleOpenPositionsClick}
           >
             Open Positions
           </button>
@@ -485,43 +500,16 @@ function App() {
         )}
 
         {activeTab === 'view-job' && <div>
-            <h3></h3>
-            <table className="table table-striped">
-  <thead style={{ backgroundColor: 'red', color: 'white' }}>
-    <tr>
-      <th>Role</th>
-      <th>Date</th>
-      <th>Experience</th>
-      <th>Degree</th>
-      <th>Job Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    {jobs.map((job, index) => {
-      // Transformer "media/pdf_job/Consultant Data Management.pdf" en URL correcte
-      const downloadUrl = `http://${host}:8081/download/pdf_job/${encodeURIComponent(job.path.split("/").pop())}`;
 
-      return (
-        <tr key={index}>
-          <td>{job.role}</td>
-          <td>{job.date}</td>
-          <td>{job.experience}</td>
-          <td>{job.diplome}</td>
-          <td>
-            <a 
-              href={downloadUrl} 
-              download={`${job.role}_description.pdf`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Download Description
-            </a>
-          </td>
-        </tr>
-      );
-    })}
-  </tbody>
-</table>
+
+
+            <h3></h3>
+
+            <JobComponent refresh={refreshJobs} />
+
+
+            
+        
           </div>}
 
         {activeTab === 'process-apps' && <div>
