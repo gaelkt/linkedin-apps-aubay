@@ -227,11 +227,17 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
       logging.info(f"Number of applications processed = {count}")
       logging.info(f"Number of applications processed successfully = {success}")
 
-      logging.info(f"Sending email at {recipient_email}")
+      logging.info("")
+      logging.info(f"Preparing to send email at {recipient_email}")
+      logging.info("")
 
       if os.environ['SEND_EMAIL']:
         computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
         logging.info(f"Sent email at {recipient_email}")
+    
+      else:
+        logging.info("")
+        logging.info("Sending email is disabled")
       
     except Exception as e:
         logging.error(e)
