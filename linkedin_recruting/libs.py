@@ -250,7 +250,7 @@ class Application:
             self.email = email
             self.phone = phone
             self.freelance = freelance
-            self.alternative_score = alternative_score
+            self.alternative_score = 0.0
             self.alternative_role = alternative_role
             self.certifications = certifications
             self.hard_skills = hard_skills
@@ -425,7 +425,7 @@ class Application:
         "soft_skills": str(self.soft_skills),
         "langues": str(self.langues),
         "alternative_role": self.alternative_role,
-        "alternative_score": self.alternative_score,
+        "alternative_score": 0.0,
         "path": (self.pathResume).replace("\\", "/")
 
     }

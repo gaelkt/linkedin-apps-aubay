@@ -87,7 +87,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
                 logging.info("--------------------------------------------")
                 logging.info("Waiting for one minute")
                 logging.info("--------------------------------------------")
-                time.sleep(65)
+                time.sleep(75)
 
 
         if job.diplome == None:
@@ -226,7 +226,6 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
 
 
-    
       logging.info(f"Number of applications received = {number_applications}")
       logging.info(f"Number of applications processed = {count}")
       logging.info(f"Number of applications processed successfully = {success}")
