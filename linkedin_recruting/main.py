@@ -241,6 +241,8 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     logging.info(f"output={output}")
     celery_task_id = output.id
     logging.info(f"Task ID={celery_task_id}")
+
+    logging.info("before result")
     result = AsyncResult(celery_task_id)
     logging.info(f"AsyncResult={result}")
 

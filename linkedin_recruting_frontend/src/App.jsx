@@ -4,7 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
-const host = "192.168.71.120";
+const host = "localhost";
 
 function App() {
   
@@ -47,7 +47,7 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-        const response = await fetch(`http://192.168.71.120:8081/view_jobs/`);
+        const response = await fetch(`http://${host}:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
           const jobsList = Object.values(data).map((item) => ({
@@ -128,23 +128,27 @@ function App() {
         body: formData,
       });
   
-      const data = await response.json(); // Convertir la réponse en JSON
-      const result=result.message;
+      const result = await response.json(); // Convertir la réponse en JSON
+      
+      //const result=result.message;
+      console.log("on a recuprerer le resultat de la requette on va la traiter")
+      
   
       if (response.ok) {
-        alert(`${result}`);
+        //alert(`${result}`);
+        console.log("statut ok")
+        console.log(response.json())
+        alert("Application successfull processing")
         
-        if (result["number of failed"] > 0) {
-          console.warn("Apps échoués :");
-          console.warn("Erreurs :");
-        }
       } else {
-        alert(`${result}`);
-        console.error("Réponse API :", result);
+        // alert(`${result}`);
+        alert("error")
+        console.error("Réponse API :", data);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      alert(`${error}`);
+      // alert(`${error}`);
+      alert("Erreur lors de la requête")
     }finally {
       setLoadingApps(false);
     }
