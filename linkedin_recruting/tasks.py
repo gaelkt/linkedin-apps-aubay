@@ -78,16 +78,12 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
         finally:
             count += 1
             output_log.append(current_output_log)
+            logging.info("--------------------------------------------")
+            logging.info("Waiting for 30 seconds")
+            logging.info("--------------------------------------------")
+            time.sleep(25)
 
-            # We wait one minute before continuing to avoid the quota limit of Gemini
-            if (c_reel+1) % 4 == 0:
-                logging.info("")
-                logging.info("")
-                logging.info("")
-                logging.info("--------------------------------------------")
-                logging.info("Waiting for one minute")
-                logging.info("--------------------------------------------")
-                time.sleep(75)
+
 
 
         if job.diplome == None:
@@ -196,17 +192,10 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
               continue
           finally:
               count += 1
-
-              # We wait one minute before continuing to avoid the quota limit of Gemini
-              if (c_reel + 1) % 3 == 0:
-                  logging.info("")
-                  logging.info("")
-                  logging.info("")
-                  logging.info("")
-                  logging.info("--------------------------------------------")
-                  logging.info("Waiting for one minute")
-                  logging.info("--------------------------------------------")
-                  time.sleep(65)
+              logging.info("--------------------------------------------")
+              logging.info("Waiting for 30 seconds")
+              logging.info("--------------------------------------------")
+              time.sleep(30)
 
 
           if ApplicationData==None:
