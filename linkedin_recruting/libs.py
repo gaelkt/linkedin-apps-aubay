@@ -424,7 +424,7 @@ class Application:
         "hard_skills": str(self.hard_skills),
         "soft_skills": str(self.soft_skills),
         "langues": str(self.langues),
-        "alternative_role": self.alternative_role,
+        "alternative_role": "None",
         "alternative_score": 0.0,
         "path": (self.pathResume).replace("\\", "/")
 
