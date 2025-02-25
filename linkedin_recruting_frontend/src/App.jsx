@@ -445,7 +445,7 @@ function App() {
               Filter
             </button>
 
-            <table className="table table-striped">
+            <table className="table table-striped" width="95%">
               <thead style={{ backgroundColor: 'red', color: 'white' }}>
                 <tr style={{ fontSize: "13px" }}>
                   <th>Name</th>
@@ -473,13 +473,13 @@ function App() {
           <td >{item.name}</td>
           <td>{item.date}</td>
           <td>{item.score}</td>   
-          <td>{item.freelance}</td>
+          <td style={{ fontSize: "12px", width:100 }}>{item.freelance}</td>
           <td>{item.experience}</td>
           <td>{item.diplome}</td>
           <td>{item.annee_diplome}</td>
           <td style={{ fontSize: "12px" }}>{item.phone}</td>
           <td>{item.email}</td>
-          <td style={{ fontSize: "10px" }}>{item.hard_skills}</td>
+          <td style={{ fontSize: "10px", width:1200 }}>{item.hard_skills}</td>
           <td>
             <a 
               href={downloadUrl} 

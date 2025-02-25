@@ -235,6 +235,8 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
         logging.info("")
         logging.info("Sending email is disabled")
         logging.info(f"os.environ['SEND_EMAIL']={os.environ['SEND_EMAIL']}")
+        logging.info("Voici les LOGS")
+        logging.info(f"output_log={output_log}")
       
     except Exception as e:
         logging.info("")
