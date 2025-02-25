@@ -22,7 +22,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 # Configure logging
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.info("Jesus Christ is my Savior")
+logging.info("Jesus-Christ is my Savior...")
 
 from utils import langchain_agent, langchain_agent_sql
 #from chunks import processMultipleApplications
@@ -50,7 +50,7 @@ from celery.result import AsyncResult
 
 
 
-logging.info("Finish")
+logging.info("Version 2 of the app")
 
 
 
@@ -116,7 +116,6 @@ logging.info("Jesus Christ is my Savior")
 def initialize_database():
 
     logging.info("Initialzying the database ...")
-    print("Initialzying the database ..")
 
      # We check database, then create database and all required table if they don't exist 
     refreshDB()
@@ -189,7 +188,6 @@ def multipleJobs(files: List[UploadFile] = File(...),
     
 
     logging.info("All files saved. Now running asynchronous tasks...")
-    print("All files saved. Now running asynchronous tasks...")
     output = processMultipleJobs.delay(saved_path_jobs, recipient_email, llm_type)
     logging.info("Finish with asynchronous tasks")
     logging.info(f"output={output}")
@@ -197,7 +195,7 @@ def multipleJobs(files: List[UploadFile] = File(...),
     logging.info(f"Task ID={celery_task_id}")
 
 
-    return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job descs. ID task: {celery_task_id}."}, status_code=200)
+    return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job desc(s). ID task: {celery_task_id}."}, status_code=200)
     
 
 
@@ -236,14 +234,9 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     # Function to process all the files asynchronously
     
     output = processMultipleApplications.delay(saved_path_applications, recipient_email, os.environ['LLM_TYPE'])
-    logging.info("Finish with asynchronous tasks")
-    logging.info(f"output={output}")
-    celery_task_id = output.id
-    logging.info(f"Task ID={celery_task_id}")
+    
 
-    return JSONResponse(content={"message": f"Processing {len(saved_path_applications)} applications. ID task: {celery_task_id}."}, status_code=200)
-
-
+    return JSONResponse(content={"message": f"Processing {len(saved_path_applications)} application(s)"}, status_code=200)
 
 
 
@@ -293,10 +286,6 @@ async def download_resume(filename: str):
     return FileResponse(file_path, filename=filename, media_type="application/pdf")
 
 if __name__ == "__main__":
-    logging.info("Starting the server")
-    logging.info("Example of logs")
-    logging.info("This is a test")
-    print("ok")
-    logging.info("This is an info message")
+    logging.info("Starting the server...")
 
     uvicorn.run("main:app", host="0.0.0.0", port=8081, reload=True)

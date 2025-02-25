@@ -347,7 +347,9 @@ class Application:
 
             # Check for any attachments
             if msg.attachments:
+                logging.info("-----------------------------------------------")
                 logging.info(f"There is {len(msg.attachments)} attachement(s)....")
+                logging.info("-----------------------------------------------")
 
                 for attachment in msg.attachments:
 
@@ -356,36 +358,41 @@ class Application:
                         raise Exception("attachement name is None")
 
                     attachment.save(customPath=self.folder, customFilename=attachment.longFilename)
-
-
                     attachement_file_path = os.path.join(self.folder, attachment.longFilename)
+                    logging.info("Attachement saved")
 
-                    _, extension = os.path.splitext(attachment.longFilename)
+
+                    
+
+                    # _, extension = os.path.splitext(attachment.longFilename)
 
             
 
-                    if extension != ".pdf":
+                    # if extension != ".pdf":
                         
                 
-                        logging.info(f"Extension {attachment.longFilename} not PDF")
+                    #     logging.info(f"Extension {attachment.longFilename} not PDF")
                 
-                        if extension == '.docx' or extension == '.doc':
+                    #     if extension == '.docx' or extension == '.doc':
 
-                            logging.info("Attachement extension is word")
+                    #         logging.info("-----------------------------")
+                    #         logging.info("Attachement extension is word")
+                    #         logging.info("-----------------------------")
 
-                            name_attachement_pdf = os.path.join(self.folder, self.name + '.pdf')
+                    #         name_attachement_pdf = os.path.join(self.folder, self.name + '.pdf')
 
-                            convert_word_2_pdf(attachement_file_path, name_attachement_pdf)
+                    #         convert_word_2_pdf(attachement_file_path, name_attachement_pdf)
                     
-                            # Delete previous word document
-                            os.remove(attachement_file_path)
-                            attachement_file_path = name_attachement_pdf
+                    #         # Delete previous word document
+                    #         os.remove(attachement_file_path)
+                    #         attachement_file_path = name_attachement_pdf
                     
-                        else:
-                            logging.error(f"Unsupported extension {extension}")
-                            raise Exception(f"Unsupported extension {extension}")
+                    #     else:
+                    #         logging.error(f"Unsupported extension {extension}")
+                    #         raise Exception(f"Unsupported extension {extension}")
 
             else:
+                logging.info("")
                 logging.error(f"There is no attachement for {self.name}. Role={self.role}")
                 raise Exception(f"There is no attachement for {self.name}. Role={self.role}")
 
@@ -479,45 +486,50 @@ def convert_word_2_pdf(word_path, pdf_path):
 
 
 
-def convert_word_2_pdf_linux(input_file, output_file):
-    import subprocess
-    import sys
+# def convert_word_2_pdf_linux(input_file, output_file):
+#     import subprocess
+#     import sys
 
-    # Check if the input file exists
-    if not os.path.exists(input_file):
-        logging.error(f"Error: Input Word File '{input_file}' does not exist.")
-        raise Exception(f"Error: Input Word File '{input_file}' does not exist.")
+#     # Check if the input file exists
+#     if not os.path.exists(input_file):
+#         logging.error(f"Error: Input Word File '{input_file}' does not exist.")
+#         raise Exception(f"Error: Input Word File '{input_file}' does not exist.")
 
-    # Determine the output directory based on the input file's location
-    output_dir = os.path.dirname(os.path.abspath(input_file))
+#     # Determine the output directory based on the input file's location
+#     output_dir = os.path.dirname(os.path.abspath(input_file))
     
-    # If no output file name is provided, create one by replacing the extension with .pdf
-    if not output_file:
-        logging.error(f"Error: Output PDF File '{input_file}'needs to be given.")
-        raise Exception(f"Error: Output PDF File '{input_file}' needs to be given.")
+#     # If no output file name is provided, create one by replacing the extension with .pdf
+#     if not output_file:
+#         logging.error(f"Error: Output PDF File '{input_file}'needs to be given.")
+#         raise Exception(f"Error: Output PDF File '{input_file}' needs to be given.")
     
-    # Build the command: use LibreOffice's headless conversion
-    command = [
-        'libreoffice',
-        '--headless',
-        '--convert-to', 'pdf',
-        input_file,
-        '--outdir', output_dir
-    ]
+#     # Build the command: use LibreOffice's headless conversion
+#     command = [
+#         'libreoffice',
+#         '--headless',
+#         '--convert-to', 'pdf',
+#         input_file,
+#         '--outdir', output_dir
+#     ]
     
-    logging.info("")
-    logging.info(f"Converting '{input_file}' to PDF...")
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+#     logging.info("")
+#     logging.info(f"Converting '{input_file}' to PDF...")
+#     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     
-    if result.returncode != 0:
-        logging.info("Error converting file:")
-        logging.info(result.stderr)
-        raise Exception(f"Impossible to convert word to pdf. Error = {result.stderr}")
-    else:
-        logging.info("")
-        logging.info(f"Conversion successful! PDF saved as '{output_file}'.")
+#     if result.returncode != 0:
+#         logging.info("Error converting file:")
+#         logging.info(result.stderr)
+#         raise Exception(f"Impossible to convert word to pdf. Error = {result.stderr}")
+#     else:
+#         logging.info("")
+#         logging.info(f"Conversion successful! PDF saved as '{output_file}'.")
 
-    return 0
+#     return 0
+
+
+
+ 
+
 
 
 def value_diplome(diplome):

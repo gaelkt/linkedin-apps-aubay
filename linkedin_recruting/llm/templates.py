@@ -336,6 +336,49 @@ prompt_template_diplome_candidat = """
 
     """
 
+prompt_template_diplome_annee_phone_candidat = """
+    Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni ci-dessous dans le contexte, ta mission est de determiner le diplôme le plus élévé du candidat, l'année d'obtention du diplôme  et le numéro de téléphone. 
+    
+    Renvois uniquement un objet JSON contenant les clés "diplome", "anne", et "phone" correspondant au diplôme le plus élévé du candidat, son année d'obtention et au numéro de téléphone du candidat.
+
+    {format_instructions}
+
+    Context: {context}
+
+    ### Instructions :
+
+    1. Determiner la liste des diplômes du candidat
+
+    2. Identifier le diplome le plus élévé
+
+    3. Trouver l'equivalent du diplôme le plus élévé
+     - Si c'est un Master 1, Master 2,  un diplome d’ingénieur ou un Bac+5 alors retourner "Master" comme diplôme le plus haut
+     - Si c'est un Bachelor, une License, un L3 alors retourner "License" comme diplôme le plus haut
+     - Si c'est un PhD, un doctorat alors retourner "Doctorat" comme diplôme le plus haut
+     - Si c'est un Baccalaureat, retourner "Baccalaureat" comme diplôme le plus haut
+     - Sinon retourner "High School"
+
+    4. Identifier l'année d'obtention du diplôme le plus haut 
+
+    5. Identifier le numéro de téléphone du candidat
+     -Inclure l'indicatif s'il est mentionné dans le contexte.
+     - Si aucun numéro n'est mentionné, retourner "" comme valeur du numero de telephone
+    
+
+     4. Vérification
+     - Est-ce bien le diplome le plus élévé que vous avez selectionné 
+     - Sa valeur est-elle bien dans la liste ["Doctorat", "Master", "License", "High School"]
+     
+
+    Ne pas fournir d'explications ou d'autres textes supplémentaires
+    
+    Ta réponse doit obligatoirement être au format JSON contenant uniquement les clé "diplome" pour le diplôme, "annee" pour son annee d'obtention et "phone" pour le numéro de téléphone
+    
+    Voici le format de la reponse
+    {{"diplome": "<votre_diplome>", "annee": "<annee>", "phone": "<numero_telephone>"}}
+           
+
+    """
 prompt_template_diplome_annee_candidat = """
 Tu es un expert en extraction d'informations depuis des CV. À partir du CV fourni dans le contexte ci-dessous, ta mission est d'identifier le diplôme le plus élevé obtenu par le candidat ainsi que l'année d'obtention de ce diplôme.
 

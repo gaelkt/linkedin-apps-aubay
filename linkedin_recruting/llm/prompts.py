@@ -115,6 +115,29 @@ def extractCertificationsRequired(context, llm):
     return output_certifications["certifications"]
 
 
+def extractDiplomeAnneePhone(context, llm):
+
+    from templates import prompt_template_diplome_annee_phone_candidat
+
+    class DiplomeAnneePhone(BaseModel):
+        diplome: str = Field(description="diplome")
+        annee: str = Field(description="annee")
+        phone: str = Field(description="phone")
+    parser_diplome_annee_experience = JsonOutputParser(pydantic_object=DiplomeAnneePhone) 
+
+    json_structure_diplome_annee_experience = {"diplome": "<diplome>", "annee": "<annee>", "phone": "<phone>"}
+
+    prompt = PromptTemplate(template=prompt_template_diplome_annee_phone_candidat, input_variables=["context"], 
+        json_structure=json_structure_diplome_annee_experience,
+        partial_variables={"format_instructions": parser_diplome_annee_experience.get_format_instructions()})
+
+    chain = prompt | llm | parser_diplome_annee_experience
+
+    output = chain.invoke({"context": context})
+
+    return output["diplome"], output["annee"], output["phone"]
+
+
 def extractPhoneCandidat(context, llm):
 
     from templates import prompt_template_phone_candidat
@@ -170,32 +193,21 @@ def extractDiplomeCandidat(context, llm):
 
     return output_diplome["diplome"]
 
-def extractExperienceCandidat(context, llm):
+def extractExperienceCandidat(context, llm, annee):
     from langchain.prompts import ChatPromptTemplate
     logging.info("Calculating Candidate Diplome, Annee et Experience")
 
     # from templates import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
-    from template_test2 import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2, prompt_template_diplome_annee_candidat
+    from template_test2 import prompt_template_experience_candidat_1, prompt_template_experience_candidat_2
     start = time.time()
 
 
-
-    json_structure_annee = {"annee": "<annee>"}
-    class Annee(BaseModel):
-        annee: str = Field(description="annee")
-    parser_annee = JsonOutputParser(pydantic_object=Annee) 
 
     json_structure_experience = {"experience": "<votre_réponse>"}
     class Experience(BaseModel):
         experience: str = Field(description="experience")
     parser_experience = JsonOutputParser(pydantic_object=Experience)
 
-    # prompt
-    logging.info("Prompt")
-
-    prompt_annee_diplome = PromptTemplate(template=prompt_template_diplome_annee_candidat, input_variables=["context"], 
-        json_structure=json_structure_annee,
-        partial_variables={"format_instructions": parser_annee.get_format_instructions()})
 
     prompt_1 = PromptTemplate(template=prompt_template_experience_candidat_1, input_variables=["context", "annee"], 
         json_structure=json_structure_experience,
@@ -207,34 +219,25 @@ def extractExperienceCandidat(context, llm):
 
     # Output
     logging.info("Running chain")
-    chain_annee = prompt_annee_diplome | llm | parser_annee
     chain_1 = prompt_1 | llm | parser_experience
     chain_2 = prompt_2 | llm | parser_experience
-
-    logging.info("Getting the year")
-    output_annee = chain_annee.invoke({"context": context})
-    annee = output_annee["annee"]
-
-    logging.info("")
-    logging.info(f"output_annee={output_annee}")
 
     if annee == "":
         logging.info("")
         logging.info("Impossible de trouver l'annee du dernier diplome ...")
         annee = "2016"
 
-    logging.info("Getting the experience 1")
 
     exp_1_ok = False
     exp_2_ok = False
     try:
         logging.info("")
         output_1 = chain_1.invoke({"context": context, "annee": annee})
-        logging.info(f"output_1={output_1}")
         exp_1 = int(output_1["experience"])/12.0
+        logging.info(f"Experience 1={exp_1}")
         exp_1_ok = True
         logging.info("")
-        logging.info("")
+ 
     
     except Exception as e:
         logging.info("")
@@ -247,11 +250,11 @@ def extractExperienceCandidat(context, llm):
 
     try:
         logging.info("")
-        logging.info("Getting the experience 2")
         output_2 = chain_2.invoke({"context": context, "annee": annee})
-        logging.info(f"output_1={output_2}")
         exp_2 = int(output_2["experience"])/12.0
+        logging.info(f"Experience 2={exp_2}")
         exp_2_ok = True
+        logging.info("")
     except Exception as e:
         logging.info("")
         logging.info("Unable to calculate the experience 2")
@@ -282,63 +285,13 @@ def extractExperienceCandidat(context, llm):
         
     logging.info(f"Final experience={experience}")
     
-
-    # #################################################
-    # #       Calcul de l'experience professionnelle
-    # #################################################
-
-    # # Json_structure and parse
-    # class Experience(BaseModel):
-    #     experience: str = Field(description="experience requise du candidat")
-    # parser_experience = JsonOutputParser(pydantic_object=Experience) 
-
-    # json_structure_experience = {"experience": "<votre_réponse>"}
-
-    # # prompt
-    # prompt_1 = PromptTemplate(template=prompt_template_experience_candidat_1, input_variables=["context"], 
-    #     json_structure=json_structure_experience,
-    #     partial_variables={"format_instructions": parser_experience.get_format_instructions()})
-
-    # prompt_2 = PromptTemplate(template=prompt_template_experience_candidat_2, input_variables=["context"], 
-    #     json_structure=json_structure_experience,
-    #     partial_variables={"format_instructions": parser_experience.get_format_instructions()})
-
-    # # chains
-    # chain_1 = prompt_1 | llm | parser_experience
-    # chain_2 = prompt_2 | llm | parser_experience
-
-    # # Outputs
-    # output_experience_1 = chain_1.invoke({"context": context, "annee":annee})
-    # logging.info("")
-    # logging.info(f"output_experience_1={output_experience_1}")
-    # # output_experience_2 = chain_2.invoke({"context": context, "annee":annee})
-    # logging.info("")
-    # # logging.info(f"output_experience_2={output_experience_2}")
-   
-
-    # # Experience
-    # experience_1 = int(output_experience_1["experience"])/12.0
-    # # experience_2 = int(output_experience_2["experience"])/12.0
-    # logging.info("")
-    # # logging.info(f"experience_1={experience_1} and experience_1={experience_1}")
-
-    # # experience = np.round(np.mean([experience_2, experience_1]), 1)
-    # experience = np.round(experience_1, 1)
-
-
-    # end = time.time()
-    # execution_time = end - start
-    # logging.info(f"experience={experience} ans and time={round(execution_time/60)} seconds")
-
-    return int(annee), experience
+    return experience
 
 def extractHardSkillsCandidat(context, llm):
 
     logging.info("Calculating Candidate Hard Skills")
 
     from templates import prompt_template_hard_skills_candidat
-
-    start = time.time()
 
     class Hard_Skills(BaseModel):
         hard_skills: str = Field(description="competence techniques requise du candidat")
@@ -352,20 +305,10 @@ def extractHardSkillsCandidat(context, llm):
 
 
     chain = prompt | llm | parser_hard_skills
-    logging.info("Chain ok")
+
     output_hard_skills = chain.invoke({"context": context})
-    logging.info("Chain Invoked")
-
-    logging.info("")
-    logging.info("")
-    logging.info("Here are hard skills")
-    logging.info(f"{output_hard_skills}")
-    logging.info("Next")
 
 
-    end = time.time()
-    execution_time = end - start
-    logging.info(f"output_hard_skills={output_hard_skills} and time={execution_time} seconds")
 
     return output_hard_skills["hard_skills"]
 

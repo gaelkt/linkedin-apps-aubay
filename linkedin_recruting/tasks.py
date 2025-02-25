@@ -20,8 +20,6 @@ from mails import computeEmailApplication, computeEmailJob
 
 load_dotenv()
 
-logging.info("File tasks.py")
-
 @app.task
 def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
     
@@ -164,10 +162,12 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
           logging.info("")
           logging.info("")
 
+          logging.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
           logging.info(f"Processing application {count + 1}/{number_applications}")
+          logging.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+
           logging.info("")
-          logging.info("")
-          logging.info("")
+
 
           # Filename of candidate application
           filename = os.path.basename(msg_file_path)
@@ -203,10 +203,11 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
           else:
               number_new_applications += 1
               if count < number_applications:
-                logging.info("--------------------------------------------")
-                logging.info(f"Waiting for 25 seconds to start application {count+1}/{number_applications}")
-                logging.info("--------------------------------------------")
-                time.sleep(25)
+                # logging.info("--------------------------------------------")
+                # logging.info(f"Waiting for 25 seconds to start application {count+1}/{number_applications}")
+                # logging.info("--------------------------------------------")
+                # time.sleep(25)
+                logging.info("Moving next application")
 
           output_log.append(current_output_log)
 
@@ -226,16 +227,18 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
       logging.info(f"Preparing to send email at {recipient_email}")
       logging.info("")
 
-      if os.environ['SEND_EMAIL']==True:
+      if os.environ['SEND_EMAIL']=="YES":
         computeEmailApplication(recipient_email=recipient_email, applications_received=number_applications, applications_processed=count, application_success=success, output_log=output_log)
         logging.info(f"Sent email at {recipient_email}")
     
       else:
         logging.info("")
         logging.info("Sending email is disabled")
+        logging.info(f"os.environ['SEND_EMAIL']={os.environ['SEND_EMAIL']}")
       
     except Exception as e:
-        logging.error(e)
+        logging.info("")
+        logging.error(f"Error in function processMultipleApplications. Error = {e}")
 
     return 0
 
