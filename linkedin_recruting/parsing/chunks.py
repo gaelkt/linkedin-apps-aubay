@@ -15,7 +15,7 @@ from langchain_community.document_loaders import PyMuPDFLoader
 
 from PyPDF2 import PdfReader
 
-from helper import generate_random_date, generate_random_id
+from helper import generate_random_date, generate_random_id, generate_date_today
 from helper import isFreelance, extractEmail, anonymizeResume
 from datetime import datetime
 
@@ -73,7 +73,7 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
         logging.info(f"Invalid path. Can not find {job_pdf_path}")
         raise Exception(f"Invalid path. Can not find {job_pdf_path}")  
 
-    job = Job(job_pdf_path=job_pdf_path, date=generate_random_date(), taskId=task.Id)
+    job = Job(job_pdf_path=job_pdf_path, date=generate_date_today(), taskId=task.Id)
 
     logging.info(f"Job initalized with task = {job.taskId}")
 
