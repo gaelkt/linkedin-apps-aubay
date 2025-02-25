@@ -1,65 +1,242 @@
-# linkedin-apps-aubay
+# Guide Deploiment sur une VM On Promise
+***
 
-## Création de l'image pour le backend
 
-Naviguez dans le répertoire `linkedin_recruiting` et créez l'image Docker pour le backend :
+Ce document décrit la configuration des services systemd mis en place pour :
+
+- Lancer le backend FastAPI dans un container Docker.
+- Lancer le frontend React en mode preview via Yarn.
+- Rebuild automatiquement le frontend React et le backend python tous les soirs à 18h.
+
+## 1. Service pour le Backend FastAPI (Docker)
+
+- creer le fichier jobs.service dans system
 
 ```bash
-cd linkedin_recruiting
-docker build -t linkedin_backend .
-Création de l'image pour le frontend
-Naviguez dans le répertoire linkedin_recruiting_frontend et créez l'image Docker pour le frontend :
+nano /etc/systemd/system/jobs.service
 
-bash
-Copy
-cd ../linkedin_recruiting_frontend
-docker build -t linkedin_frontend .
-Assemblage des containers avec Docker Compose
-Retournez dans le répertoire parent et démarrez les containers avec Docker Compose :
+```
+-copier le contenu suivant 
 
-bash
-Copy
-cd ..
-docker-compose up
-Création d'un service systemd pour lancer les containers
-Vous pouvez créer un service pour lancer vos containers automatiquement. Commencez par créer le fichier de service :
-
-bash
-Copy
-sudo nano /etc/systemd/system/linkedin_recruiting.service
-Ensuite, ajoutez le contenu suivant (n'oubliez pas d'adapter les chemins et commandes selon votre configuration) :
-
-ini
-Copy
+```ini
 [Unit]
-Description=Lancement automatique de mes conteneurs avec Docker Compose
-Requires=docker.service
+Description=Service Docker pour le container "jobs"
 After=docker.service
+Requires=docker.service
 
 [Service]
-# Indiquez le répertoire où se trouve votre fichier docker-compose.yml
-WorkingDirectory=/chemin/vers/votre/projet
-# Commande pour démarrer les conteneurs en arrière-plan
-ExecStart=/usr/local/bin/docker-compose up -d
-# Commande pour arrêter les conteneurs proprement
-ExecStop=/usr/local/bin/docker-compose down
-# Redémarrer le service en cas d'échec
 Restart=always
+# Arrête et supprime le container existant pour éviter les conflits
+ExecStartPre=-/usr/bin/docker stop jobs
+ExecStartPre=-/usr/bin/docker rm jobs
+# Lancement du container avec les ports et volumes définis
+ExecStart=/usr/bin/docker run --name jobs -p 8081:8081 -p 3306:3306 -p 5672:5672 -p 15762:15672 -v mysql_data:/var/lib/mysql -v jobs_media:/app/media backend-image
 
 [Install]
 WantedBy=multi-user.target
-Après avoir sauvegardé le fichier, rechargez les fichiers de configuration systemd :
 
-bash
-Copy
+
+```
+- recharger systemd
+
+
+```bash
 sudo systemctl daemon-reload
-Ensuite, activez et démarrez le service pour qu’il se lance automatiquement au démarrage :
 
-bash
-Copy
-sudo systemctl start linkedin_recruiting.service
-Vous pouvez vérifier immédiatement le statut du service avec :
+```
+-Activer et démarrer le service :
 
-bash
-Copy
-sudo systemctl status linkedin_recruiting.service
+```bash
+sudo systemctl enable jobs.service
+sudo systemctl start jobs.service
+
+```
+
+2. Service pour le Build
+
+- creer le fichier /etc/systemd/system/rebuild.service
+
+```bash
+nano /etc/systemd/system/rebuild.service
+
+```
+- copier le contenu suivant 
+
+```ini
+
+[Unit]
+Description=Reconstruction de l'image Docker backend-image
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker build -t backend-image /root/apps/linkedin_aubay_apps/linkedin_recruting/Dockerfile
+ExecStartPost=/usr/bin/docker rm -f jobs
+ExecStartPost=/usr/bin/docker run --name jobs -p 8081:8081 -p 3306:3306 -p 5672:5672 -p 15762:15672 -v mysql_data:/var/lib/mysql -v jobs_media:/app/media backend-image
+
+
+```
+
+- Créez un fichier /etc/systemd/system/rebuild.timer :
+
+ce timer va construire l'image docker pour le backend tous les soir a 18h
+
+```ini
+[Unit]
+Description=Timer pour reconstruire l'image Docker tous les jours à 18h
+
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+```
+- redemmarer les daemons
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable rebuild.timer
+sudo systemctl start rebuild.timer
+
+
+```
+
+
+
+## Service pour le Frontend React (Yarn Preview)
+
+Ce service lance l'application React en mode preview via Yarn.
+La commande utilise l'option --host pour lier le serveur sur toutes les interfaces (0.0.0.0) 
+- creer le fichier de service 
+
+```bash
+nano /etc/systemd/system/linkedin-frontend.service
+
+```
+- copier et coller le contenu suivant
+
+```ini
+[Unit]
+Description=Service pour lancer le frontend React avec Yarn
+After=network.target
+
+[Service]
+WorkingDirectory=/root/apps/linkedin-apps-aubay/linkedin_recruting_frontend
+ExecStart=/usr/local/bin/yarn preview --host 
+Restart=always
+User=root
+# Définition du PATH pour s'assurer que yarn et node sont accessibles
+Environment="PATH=/usr/local/bin:/usr/bin"
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+- Recharger systemd:
+
+```bash
+sudo systemctl daemon-reload
+
+
+```
+- Activer et démarrer le service :
+
+```bash
+sudo systemctl enable linkedin-frontend.service
+sudo systemctl start linkedin-frontend.service
+
+
+```
+
+- verifier le statut:
+
+```bash
+sudo systemctl status linkedin-frontend.service
+
+```
+
+## Service de build du frontend React
+
+Pour reconstruire automatiquement l’application tous les soirs à 18h, nous avons créé un service associé à un timer.
+
+1.  Service de build
+
+- creer le Fichier : /etc/systemd/system/linkedin-frontend-build.service
+
+
+```bash
+nano /etc/systemd/system/linkedin-frontend-build.service
+
+```
+
+- copier le contenu suivant:
+
+```ini
+
+[Unit]
+Description=Timer pour lancer le build du frontend React tous les soirs à 18h
+
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+
+```
+
+2. Service du Timer
+
+Ce timer déclenche le service de build tous les jours à 18h.
+
+- creer le fichier /etc/systemd/system/linkedin-frontend-build.timer
+
+```bash
+
+nano /etc/systemd/system/linkedin-frontend-build.timer
+
+```
+
+- recharger les daemon
+
+```bash
+
+sudo systemctl daemon-reload
+sudo systemctl enable linkedin-frontend-build.timer
+sudo systemctl start linkedin-frontend-build.timer
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
