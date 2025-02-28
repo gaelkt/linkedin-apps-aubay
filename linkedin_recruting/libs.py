@@ -233,6 +233,7 @@ class Job:
 class Application:
     def __init__(self, msg_file_path=None, Id=None, roleId=None, name=None,
     role=None, date=None, score=None, experience=None, diplome=None, annee_diplome=None,
+    email=None, phone=None, freelance=None,
     alternative_score=None, alternative_role=None, certifications=None,
     hard_skills=None, soft_skills=None, langues=None, path=None):
 
@@ -246,7 +247,10 @@ class Application:
             self.experience = experience
             self.diplome = diplome
             self.annee_diplome = annee_diplome
-            self.alternative_score = alternative_score
+            self.email = email
+            self.phone = phone
+            self.freelance = freelance
+            self.alternative_score = 0.0
             self.alternative_role = alternative_role
             self.certifications = certifications
             self.hard_skills = hard_skills
@@ -299,13 +303,14 @@ class Application:
 
             if roleId == None:
                 logging.info(f"Role {self.role} is not in the job database yet")
-                raise Exception(f"Role {self.role} is not in the job database yet")
+                self.isApplicationOld = False
+                return 
             else:
                 self.role = role
                 self.roleId = roleId
                 logging.info(f"role={self.role} roleId={self.roleId}")
 
-
+        logging.info("Processing other application data")
         # We generate a random ID for the application
         self.Id = generate_random_id()
 
@@ -343,7 +348,9 @@ class Application:
 
             # Check for any attachments
             if msg.attachments:
+                logging.info("-----------------------------------------------")
                 logging.info(f"There is {len(msg.attachments)} attachement(s)....")
+                logging.info("-----------------------------------------------")
 
                 for attachment in msg.attachments:
 
@@ -352,36 +359,41 @@ class Application:
                         raise Exception("attachement name is None")
 
                     attachment.save(customPath=self.folder, customFilename=attachment.longFilename)
-
-
                     attachement_file_path = os.path.join(self.folder, attachment.longFilename)
+                    logging.info("Attachement saved")
 
-                    _, extension = os.path.splitext(attachment.longFilename)
+
+                    
+
+                    # _, extension = os.path.splitext(attachment.longFilename)
 
             
 
-                    if extension != ".pdf":
+                    # if extension != ".pdf":
                         
                 
-                        logging.info(f"Extension {attachment.longFilename} not PDF")
+                    #     logging.info(f"Extension {attachment.longFilename} not PDF")
                 
-                        if extension == '.docx' or extension == '.doc':
+                    #     if extension == '.docx' or extension == '.doc':
 
-                            logging.info("Attachement extension is word")
+                    #         logging.info("-----------------------------")
+                    #         logging.info("Attachement extension is word")
+                    #         logging.info("-----------------------------")
 
-                            name_attachement_pdf = os.path.join(self.folder, self.name + '.pdf')
+                    #         name_attachement_pdf = os.path.join(self.folder, self.name + '.pdf')
 
-                            convert_word_2_pdf(attachement_file_path, name_attachement_pdf)
+                    #         convert_word_2_pdf(attachement_file_path, name_attachement_pdf)
                     
-                            # Delete previous word document
-                            os.remove(attachement_file_path)
-                            attachement_file_path = name_attachement_pdf
+                    #         # Delete previous word document
+                    #         os.remove(attachement_file_path)
+                    #         attachement_file_path = name_attachement_pdf
                     
-                        else:
-                            logging.error(f"Unsupported extension {extension}")
-                            raise Exception(f"Unsupported extension {extension}")
+                    #     else:
+                    #         logging.error(f"Unsupported extension {extension}")
+                    #         raise Exception(f"Unsupported extension {extension}")
 
             else:
+                logging.info("")
                 logging.error(f"There is no attachement for {self.name}. Role={self.role}")
                 raise Exception(f"There is no attachement for {self.name}. Role={self.role}")
 
@@ -398,8 +410,8 @@ class Application:
         table_applications = os.environ['DB_TABLE_APPLICATIONS']
 
         insert_query = f"""
-    INSERT INTO {table_applications} (score, Id, roleId, date,  name, role, experience, diplome, annee_diplome, certifications, hard_skills, soft_skills, langues, alternative_role, alternative_score, path) 
-    VALUES (:score, :Id, :roleId, :date, :name, :role, :experience, :diplome, :annee_diplome, :certifications, :hard_skills, :soft_skills, :langues, :alternative_role, :alternative_score, :path);
+    INSERT INTO {table_applications} (score, Id, roleId, date,  name, role, experience, diplome, annee_diplome, email, phone, freelance, certifications, hard_skills, soft_skills, langues, alternative_role, alternative_score, path) 
+    VALUES (:score, :Id, :roleId, :date, :name, :role, :experience, :diplome, :annee_diplome, :email, :phone, :freelance, :certifications, :hard_skills, :soft_skills, :langues, :alternative_role, :alternative_score, :path);
     """
 
         # Define the values to insert
@@ -413,12 +425,15 @@ class Application:
         "experience": self.experience,
         "diplome": self.diplome,
         "annee_diplome": self.annee_diplome,
+        "email": self.email,
+        "phone": self.phone,
+        "freelance": self.freelance,
         "certifications": str(self.certifications),
         "hard_skills": str(self.hard_skills),
         "soft_skills": str(self.soft_skills),
         "langues": str(self.langues),
-        "alternative_role": self.alternative_role,
-        "alternative_score": self.alternative_score,
+        "alternative_role": "None",
+        "alternative_score": 0.0,
         "path": (self.pathResume).replace("\\", "/")
 
     }
@@ -449,13 +464,73 @@ def convert_word_2_pdf(word_path, pdf_path):
     try:
         
         if not os.path.isfile(word_path):
-            print(f"The word document does not exist {word_path}")
+            logging.info(f"The word document does not exist {word_path}")
             raise Exception("Word document does not exists")
-        convert(word_path, pdf_path)
+
+        if pdf_path == None:
+            logging.info("Output pdf can not be none in function convert_word_2_pdf")
+            raise Exception("Output pdf can not be none in function convert_word_2_pdf")
+        
+        # Windows platform
+        if os.environ['PLATFORM'] == "windows":
+            convert(word_path, pdf_path)
+
+        # Linux platform
+        else:
+            convert_word_2_pdf_linux(word_path, pdf_path)
         
     except Exception as e:
-        print(e)
+        logging.info("Unable to convert doc to pdf")
+        logging.error(e)
         raise Exception(e)
+
+
+
+
+# def convert_word_2_pdf_linux(input_file, output_file):
+#     import subprocess
+#     import sys
+
+#     # Check if the input file exists
+#     if not os.path.exists(input_file):
+#         logging.error(f"Error: Input Word File '{input_file}' does not exist.")
+#         raise Exception(f"Error: Input Word File '{input_file}' does not exist.")
+
+#     # Determine the output directory based on the input file's location
+#     output_dir = os.path.dirname(os.path.abspath(input_file))
+    
+#     # If no output file name is provided, create one by replacing the extension with .pdf
+#     if not output_file:
+#         logging.error(f"Error: Output PDF File '{input_file}'needs to be given.")
+#         raise Exception(f"Error: Output PDF File '{input_file}' needs to be given.")
+    
+#     # Build the command: use LibreOffice's headless conversion
+#     command = [
+#         'libreoffice',
+#         '--headless',
+#         '--convert-to', 'pdf',
+#         input_file,
+#         '--outdir', output_dir
+#     ]
+    
+#     logging.info("")
+#     logging.info(f"Converting '{input_file}' to PDF...")
+#     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+#     if result.returncode != 0:
+#         logging.info("Error converting file:")
+#         logging.info(result.stderr)
+#         raise Exception(f"Impossible to convert word to pdf. Error = {result.stderr}")
+#     else:
+#         logging.info("")
+#         logging.info(f"Conversion successful! PDF saved as '{output_file}'.")
+
+#     return 0
+
+
+
+ 
+
 
 
 def value_diplome(diplome):
@@ -517,6 +592,7 @@ def selectApplication(roles, begin_date, end_date):
         for result in results:
             application = Application(name=result['name'], score=result['score'],
             experience=result['experience'], date=result['date'], diplome=result['diplome'], annee_diplome=result['annee_diplome'],
+            email=result['email'], phone=result['phone'], freelance=result['freelance'],
             path=result['path'], certifications=result['certifications'], hard_skills=result['hard_skills'],
             soft_skills=result['soft_skills'], langues=result['langues'])
             applications_list.append(application)

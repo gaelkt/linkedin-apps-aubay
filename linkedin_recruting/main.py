@@ -22,7 +22,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'email'))
 # Configure logging
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.info("Jesus Christ is my Savior")
+logging.info("Jesus-Christ is my Savior...")
 
 from utils import langchain_agent, langchain_agent_sql
 #from chunks import processMultipleApplications
@@ -50,7 +50,7 @@ from celery.result import AsyncResult
 
 
 
-logging.info("Finish")
+logging.info("Version 2 of the app")
 
 
 
@@ -59,6 +59,7 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 default_pdf_jobs_folder = os.environ['PDF_JOBS_FOLDER']
 default_email_folder = os.environ['EMAIL_FOLDER']
 default_resume_folder = os.environ['RESUME_FOLDER']
+default_temp_folder = os.environ['TEMP_FOLDER']
 
 llm_type = os.environ['LLM_TYPE']
 
@@ -74,6 +75,9 @@ if not os.path.exists(default_email_folder):
 # We create pdf job folder if it does not exist
 if not os.path.exists(default_pdf_jobs_folder):
     os.makedirs(default_pdf_jobs_folder)
+# We create temp folder if it does not exist
+if not os.path.exists(default_temp_folder):
+    os.makedirs(default_temp_folder)
 
 
 app = FastAPI(
@@ -85,6 +89,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173", 
     "http://localhost:8081",
+    "http://192.168.71.120:8081",
     "*"  
 ]
 
@@ -111,7 +116,6 @@ logging.info("Jesus Christ is my Savior")
 def initialize_database():
 
     logging.info("Initialzying the database ...")
-    print("Initialzying the database ..")
 
      # We check database, then create database and all required table if they don't exist 
     refreshDB()
@@ -142,7 +146,8 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
     for role in selection:
         output[role] = [{"name": candidate.name, "score": candidate.score, "date":str(candidate.date),
-        "experience":candidate.experience, "diplome":candidate.diplome, "freelance": "NO", "annee_diplome":candidate.annee_diplome,
+        "experience":candidate.experience, "diplome":candidate.diplome, "annee_diplome":candidate.annee_diplome,
+        "email":candidate.email, "phone":candidate.phone, "freelance": candidate.freelance,
         "certifications":candidate.certifications, "hard_skills":candidate.hard_skills,
         "soft_skills":candidate.soft_skills, "langues":candidate.langues, "path":candidate.path} for candidate in selection[role]]
 
@@ -183,17 +188,14 @@ def multipleJobs(files: List[UploadFile] = File(...),
     
 
     logging.info("All files saved. Now running asynchronous tasks...")
-    print("All files saved. Now running asynchronous tasks...")
     output = processMultipleJobs.delay(saved_path_jobs, recipient_email, llm_type)
     logging.info("Finish with asynchronous tasks")
     logging.info(f"output={output}")
     celery_task_id = output.id
     logging.info(f"Task ID={celery_task_id}")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
-    
 
-    return JSONResponse(content={"message": f"Processing__ {saved_path_jobs}. ID task: {celery_task_id}."}, status_code=200)
+
+    return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job desc(s). ID task: {celery_task_id}."}, status_code=200)
     
 
 
@@ -232,24 +234,21 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     # Function to process all the files asynchronously
     
     output = processMultipleApplications.delay(saved_path_applications, recipient_email, os.environ['LLM_TYPE'])
-    logging.info("Finish with asynchronous tasks")
-    logging.info(f"output={output}")
-    celery_task_id = output.id
-    logging.info(f"Task ID={celery_task_id}")
-    result = AsyncResult(celery_task_id)
-    logging.info(f"AsyncResult={result}")
+    
 
-    return JSONResponse(content={"message": f"Processing {len(saved_path_applications)}. ID task: {celery_task_id}."}, status_code=200)
-
-
+    return JSONResponse(content={"message": f"Processing {len(saved_path_applications)} application(s)"}, status_code=200)
 
 
 
 @app.get("/report/")
 def sendReport(recipient_email, begin_date, end_date, roles: list[str] = Query([])):
 
+    logging.info("sendReport endpoint")
+
     # Selecting applications to send via email
     selection = selectApplication(roles, begin_date, end_date)
+
+    logging.info(F"selection={selection}")
 
     # Sending selected applications
     sendEmail(recipient_email, selection, topN=10)
@@ -291,10 +290,6 @@ async def download_resume(filename: str):
     return FileResponse(file_path, filename=filename, media_type="application/pdf")
 
 if __name__ == "__main__":
-    logging.info("Starting the server")
-    logging.info("Example of logs")
-    logging.info("This is a test")
-    print("ok")
-    logging.info("This is an info message")
+    logging.info("Starting the server...")
 
     uvicorn.run("main:app", host="0.0.0.0", port=8081, reload=True)

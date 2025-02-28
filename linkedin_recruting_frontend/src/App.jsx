@@ -4,14 +4,15 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './Chat';
-const host = "localhost";
+import JobComponent from './JobComponent';
+//const host = "localhost";
 
 function App() {
   
   const [activeTab, setActiveTab] = useState('settings');
   const [role, setRole] = useState('');
   const [startDate, setStartDate] = useState('2024-10-01');
-  const [endDate, setEndDate] = useState('2024-10-31');
+  const [endDate, setEndDate] = useState('2025-03-30');
   const [filteredData, setFilteredData] = useState([]);
   const [rolesList, setRolesList] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -25,6 +26,10 @@ function App() {
   const [selectedApplication, setSelectedApplication] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false); // Déclarez l'état loading
   const [loadingApps, setLoadingApps] = useState(false); // Déclarez l'état loading
+  const [refreshJobs, setRefreshJobs] = useState(0);
+  
+  
+  const host = import.meta.env.VITE_HOST;
 
 
 
@@ -47,7 +52,8 @@ function App() {
 
     const fetchJobs = async () => {
       try {
-        const response = await fetch(`http://localhost:8081/view_jobs/`);
+        console.log("L'URL de l'API est :", host);
+        const response = await fetch(`http://${host}:8081/view_jobs/`);
         if (response.ok) {
           const data = await response.json();
           const jobsList = Object.values(data).map((item) => ({
@@ -70,12 +76,28 @@ function App() {
     fetchJobs();
   }, []);
 
+
+  const handleOpenPositionsClick = () => {
+    // On active l'onglet et on met à jour le state pour forcer le rafraîchissement
+    setActiveTab('view-job');
+    setRefreshJobs(Date.now()); // Utilisation d'un timestamp unique
+  };
+
+
+ 
+
+
+
   const handleInitializeDB = async () => {
     try {
       const response = await fetch(`http://${host}:8081/initialization/`);
+      const data= await response.json();
+      const result=data.message;
+      
+      
 
       if (response.ok) {
-        alert('Base de données initialisée avec succès!');
+        alert(`${result}`);
       } else {
         alert('Erreur lors de l\'initialisation de la base de données.');
       }
@@ -117,29 +139,26 @@ function App() {
       const response = await fetch(`http://${host}:8081/applications/?recipient_email=${emailApp}`, {
         method: "POST",
         headers: {
-          accept: "application/json", // L'API attend ce header
-          // ⚠️ Ne pas ajouter 'Content-Type': 'multipart/form-data'
-          // Fetch l'ajoute automatiquement avec le bon boundary
+          accept: "application/json", 
         },
         body: formData,
       });
   
-      const result = await response.json(); // Convertir la réponse en JSON
+      const data = await response.json(); // Convertir la réponse en JSON
+      const result=data.message;
+      console.log("------------------------------");
+      console.log(result);
   
       if (response.ok) {
-        alert(`Applications succcessfully added !`);
+        alert(`${result}`);
         
-        if (result["number of failed"] > 0) {
-          console.warn("Apps échoués :");
-          console.warn("Erreurs :");
-        }
       } else {
-        alert("❌ Une erreur est survenue lors du traitement des Applications.");
+        alert(`${result}`);
         console.error("Réponse API :", result);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      alert("❌ Une erreur réseau est survenue.");
+      alert(`${error}`);
     }finally {
       setLoadingApps(false);
     }
@@ -170,22 +189,25 @@ function App() {
         body: formData,
       });
   
-      const result = await response.json(); // Convertir la réponse en JSON
+      const data = await response.json(); // Convertir la réponse en JSON
+      const result=data.message;
+      console.log("------------------------------");
+      console.log(result);
   
       if (response.ok) {
-        alert(`Jobs succcessfully added !`);
+        alert(`${result}`);
         
         if (result["number of failed"] > 0) {
           console.warn("Jobs échoués :");
           console.warn("Erreurs :");
         }
       } else {
-        alert("❌ Une erreur est survenue lors du traitement des jobs.");
+        alert(`${result}`);
         console.error("Réponse API :", result);
       }
     } catch (error) {
       console.error("Erreur lors de la requête :", error);
-      alert("❌ Une erreur réseau est survenue.");
+      alert(`${error}`);
     }finally{
       setLoadingJobs(false);
     }
@@ -273,7 +295,7 @@ function App() {
           <button 
             className={`nav-link ${activeTab === 'view-job' ? 'active' : ''}`} 
             style={{ color: activeTab === 'view-job' ? 'white' : 'red', backgroundColor: activeTab === 'view-job' ? 'red' : 'white' }}
-            onClick={() => setActiveTab('view-job')}
+            onClick={handleOpenPositionsClick}
           >
             Open Positions
           </button>
@@ -423,15 +445,18 @@ function App() {
               Filter
             </button>
 
-            <table className="table table-striped">
+            <table className="table table-striped" width="95%">
               <thead style={{ backgroundColor: 'red', color: 'white' }}>
-                <tr>
+                <tr style={{ fontSize: "13px" }}>
                   <th>Name</th>
                   <th>Date</th>
                   <th>Score</th>
                   <th>Freelance</th>
                   <th>Experience</th>
                   <th>Degree</th>
+                  <th>Year</th>
+                  <th>Phone</th>
+                  <th>Email</th>
                   <th>Hard Skills</th>
                   <th>Resume</th>
                   
@@ -444,14 +469,17 @@ function App() {
       const downloadUrl = `http://${host}:8081/download/resume/${encodeURIComponent(item.path.split("/").pop())}`;
 
       return (
-        <tr key={index}>
-          <td>{item.name}</td>
+        <tr key={index} style={{ fontSize: "13px" }}>
+          <td >{item.name}</td>
           <td>{item.date}</td>
-          <td>{item.score}</td>
-          <td>{item.freelance}</td>
+          <td>{item.score}</td>   
+          <td style={{ fontSize: "12px", width:100 }}>{item.freelance}</td>
           <td>{item.experience}</td>
           <td>{item.diplome}</td>
-          <td style={{ fontSize: "13px" }}>{item.hard_skills}</td>
+          <td>{item.annee_diplome}</td>
+          <td style={{ fontSize: "12px" }}>{item.phone}</td>
+          <td>{item.email}</td>
+          <td style={{ fontSize: "10px", width:1200 }}>{item.hard_skills}</td>
           <td>
             <a 
               href={downloadUrl} 
@@ -472,43 +500,16 @@ function App() {
         )}
 
         {activeTab === 'view-job' && <div>
-            <h3></h3>
-            <table className="table table-striped">
-  <thead style={{ backgroundColor: 'red', color: 'white' }}>
-    <tr>
-      <th>Role</th>
-      <th>Date</th>
-      <th>Experience</th>
-      <th>Degree</th>
-      <th>Job Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    {jobs.map((job, index) => {
-      // Transformer "media/pdf_job/Consultant Data Management.pdf" en URL correcte
-      const downloadUrl = `http://${host}:8081/download/pdf_job/${encodeURIComponent(job.path.split("/").pop())}`;
 
-      return (
-        <tr key={index}>
-          <td>{job.role}</td>
-          <td>{job.date}</td>
-          <td>{job.experience}</td>
-          <td>{job.diplome}</td>
-          <td>
-            <a 
-              href={downloadUrl} 
-              download={`${job.role}_description.pdf`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Download Description
-            </a>
-          </td>
-        </tr>
-      );
-    })}
-  </tbody>
-</table>
+
+
+            <h3></h3>
+
+            <JobComponent refresh={refreshJobs} />
+
+
+            
+        
           </div>}
 
         {activeTab === 'process-apps' && <div>

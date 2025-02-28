@@ -31,3 +31,4 @@ python-multipart
 langchain-google-genai
 google-generativeai
 celery
+python-docx

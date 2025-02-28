@@ -404,10 +404,13 @@ def createApplicationTable(table_applications):
                 role VARCHAR(255) NOT NULL,
                 date DATE,
                 score FLOAT,
-                alternative_role VARCHAR(255) NOT NULL,
+                alternative_role VARCHAR(255),
                 alternative_score FLOAT,
                 diplome VARCHAR(255),
                 annee_diplome INT,
+                email VARCHAR(255),
+                phone VARCHAR(255),
+                freelance VARCHAR(255),
                 experience FLOAT,
                 certifications TEXT,
                 hard_skills TEXT,
@@ -678,7 +681,8 @@ def getApplication(role, begin_date, end_date):
         # Query to fetch applications for a specific role
         query = f"""
         SELECT Id, roleId, name, role, date, score, experience, experience, 
-               diplome, annee_diplome, alternative_score, alternative_role, certifications,
+               diplome, annee_diplome, email, phone, freelance,
+               alternative_score, alternative_role, certifications,
                hard_skills, soft_skills, langues, path
         FROM {table_applications}
         WHERE role = %s AND date BETWEEN %s AND %s
