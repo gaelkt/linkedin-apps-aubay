@@ -243,8 +243,12 @@ async def multipleApplications(files: List[UploadFile] = File(...),
 @app.get("/report/")
 def sendReport(recipient_email, begin_date, end_date, roles: list[str] = Query([])):
 
+    logging.info("sendReport endpoint")
+
     # Selecting applications to send via email
     selection = selectApplication(roles, begin_date, end_date)
+
+    logging.info(F"selection={selection}")
 
     # Sending selected applications
     sendEmail(recipient_email, selection, topN=10)
