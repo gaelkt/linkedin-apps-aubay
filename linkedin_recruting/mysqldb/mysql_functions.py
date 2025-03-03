@@ -1,12 +1,14 @@
-
+from mysqldb.utils import hash_password,verify_password
 from sqlalchemy import create_engine, text
-
 import mysql.connector
 from mysql.connector import Error
 import os
+import sys
 from dotenv import load_dotenv
 load_dotenv()
 import logging
+
+
 
 host=os.environ['DB_HOST'] 
 port=os.environ.get("DB_PORT")
@@ -14,10 +16,13 @@ user=os.environ['DB_USER']
 password=os.environ['DB_PASSWORD'] 
 database_name=os.environ['DB_NAME']  
 table_jobs = os.environ['DB_TABLE_JOB']  
+table_users = os.environ['DB_TABLE_USERS'] 
 table_applications = os.environ['DB_TABLE_APPLICATIONS'] 
 table_scores = os.environ['DB_TABLE_SCORES']
 table_tasks = os.environ['DB_TABLE_TASKS'] 
 celery_table = os.environ['CELERY_TABLE_TASKS'] 
+
+
 
 database_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database_name}"
 
@@ -53,7 +58,22 @@ def createDB():
 
 
 
-
+def refreshDBLite():
+    try:
+        db_exists = checkDB()
+        if not db_exists:
+            logging.info(f"Database {database_name} does not exist. Creating a new one")
+            return 0
+        else:
+            logging.info(f"Database {database_name} already exists")
+            if not checkTable(table_name=table_users):
+                createUsersTable(table_users=table_users)
+                logging.info(f"Users table {table_users} has been created successfully !")
+    except Error as e:
+        logging.critical(f"Error: {e}")
+    finally:
+        logging.info("Finish with function refreshDB ")
+    return 0
 
 def refreshDB():
 
@@ -80,7 +100,14 @@ def refreshDB():
         if not db_exists:
             createDB()
             
+        # Checking User table
+        
+        if not checkTable(table_name=table_users):
+                createUsersTable(table_users=table_users)
+                logging.info(f"Users table {table_users} has been created successfully !")
+                
         # Checking JOBS table
+        
         if not checkTable(table_name=table_jobs):
         
             # JOBS table does not exist. We Create a new one
@@ -299,6 +326,83 @@ def createJobsTable(table_jobs):
         if connection.is_connected():
             cursor.close()
             connection.close()
+            
+            
+            
+def createUsersTable(table_users):
+    logging.info(f"......Creating Users table {table_users}") 
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(host=host,port=port, user=user, password=password, database=database_name)
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+            # SQL command to create the jobs table
+
+
+            create_table_query = f"""
+            CREATE TABLE IF NOT EXISTS {table_users} (
+                Id VARCHAR(255) PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                date DATE,
+                isActive BOOLEAN DEFAULT TRUE,
+                message VARCHAR(255) NOT NULL
+             
+            )
+            """
+            # Execute the SQL command
+            cursor.execute(create_table_query)
+            connection.commit()  # Save changes
+            logging.info(f"Table {table_users} created successfully !.")
+
+    except Error as e:
+        logging.error(f"Unable to create User table {table_users} in the function createUsersTable: Error {e} \n")
+
+        raise Exception(e)
+
+    finally:
+        # Close the database connection
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+def getUserId(Id):
+    try:
+        if Id == None:
+            logging.error(f"role can not be None. Error in function getRoleId")
+            raise Exception("role can not be None. Error in function getRoleId")
+
+        
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(host=host, port=port, user=user, password=password, database=database_name)
+
+        cursor = connection.cursor()
+
+        # Define the query
+        query = f"""
+        SELECT Id FROM {table_users}
+        WHERE Id = %s
+        LIMIT 1;
+        """
+
+        # Execute the query with parameters
+        cursor.execute(query, (Id,))
+
+        # Fetch the result
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+        
+        # Return RoleID if found, otherwise None
+        return True if result else False
+
+    except mysql.connector.Error as e:
+        logging.error(f"Error in the function getRoleId for the role={Id}. Error = {e}")
+        raise Exception(e)
 
 
 
@@ -363,6 +467,55 @@ def getRole(roleId):
 
     except mysql.connector.Error as err:
         logging.error(f"Error in the function getRole: {err}")
+        return None
+
+    finally:
+        # Close the cursor and connection
+        if 'cursor' in locals() and cursor is not None:
+            cursor.close()
+        if 'connection' in locals() and connection is not None:
+            connection.close()
+
+
+def getCredentials(email, password_user):
+    try:
+        # Connect to the MySQL database
+        
+        connection = mysql.connector.connect(host=host,port=port, user=user, password=password,database=database_name)
+
+        cursor = connection.cursor()
+        
+        
+        logging.info(f"Email: {email}")
+        logging.info(f"Password: {password_user}")
+        
+        hash = hash_password(password_user)
+        
+        logging.info(f"Hashed password: {hash}")
+
+        # Query to get Role for a specific RoleID
+        query = f"SELECT password,username FROM {table_users} WHERE email  = %s"
+        cursor.execute(query, (email,))
+       
+
+        # Fetch the result
+        result = cursor.fetchone()
+
+        
+        if result:
+            logging.info(f"User {result[0]} found")
+            logging.info(f"Verify password")
+            if verify_password(password_user,result[0]):
+                logging.info(f"Password verified")
+                return result[1]
+            else:
+                logging.info(f"Password not verified")
+                return None
+        else:
+            return None 
+
+    except mysql.connector.Error as err:
+        logging.error(f"Error in the function getCredentials: {err}")
         return None
 
     finally:
@@ -755,7 +908,8 @@ def getJobs():
 
 
 
-
+def loginUser(email:str,password:str):
+    return 0
 
 
 
