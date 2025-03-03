@@ -25,14 +25,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logging.info("Jesus-Christ is my Savior...")
 
 from utils import langchain_agent, langchain_agent_sql
+from request import UserRequest
 #from chunks import processMultipleApplications
 from tasks import processMultipleApplications, processMultipleJobs
 #from tasks import process_jobs_task, process_multiple_applications_task
-from mysql_functions import refreshDB, getJobs
-from mails import sendEmail
-from mails import sendEmailGeneral
-from libs import TaskCelery
-from libs import selectApplication, Task, setLLM
+from mysql_functions import refreshDB, getJobs, refreshDBLite,getCredentials,checkEmail,setIsActiveUser
+from mails import sendEmailGeneral,sendEmail,computeEmailAccount
+from libs import selectApplication, Task, setLLM,TaskCelery,User
 from datetime import datetime
 from helper import generate_random_id
 
@@ -110,6 +109,10 @@ add_routes(
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.info("Jesus Christ is my Savior")
 
+logging.info("initialize user for default db...")
+
+refreshDBLite()
+
 
 # Endpoint used to setup the database and all tables
 @app.get("/initialization/")
@@ -123,6 +126,46 @@ def initialize_database():
     content = {"message": f"Database {os.environ['DB_NAME']} is ready "}
 
     return JSONResponse(content=content, status_code=200)
+
+# Endpoint used to loging user
+@app.get("/login/")
+def login(user: str, password: str):
+    
+    username=getCredentials(user, password)
+    if username:
+        if username=="User is not active":
+            content = {"message": f"User {user} not Authorized"}
+            return JSONResponse(content=content, status_code=401)
+        content = {"message": username}
+        return JSONResponse(content=content, status_code=200)
+    else:
+        content = {"message": f"Login or Password Incorrect"}
+        return JSONResponse(content=content, status_code=401)
+    
+
+# Endpoint used to create user 
+@app.post("/register/")
+def create_user(user: UserRequest):
+    user=User(user.username, user.email, user.password)
+    computeEmailAccount(user.email)
+    content={"message": f"User {user.username} is created"}
+    return JSONResponse(content=content, status_code=200)
+
+# Endpoint used to activate  user
+@app.get("/active/")
+def activeUser(email:str):
+    check=checkEmail(email)
+    if check:
+        logging.info(f"User we  {email} exists on database")
+        setIsActiveUser(email)
+        content={"message": f"User {email} is active"}
+        return JSONResponse(content=content, status_code=200)
+    else:
+        content={"message": f"User {email} is not active"}
+        return JSONResponse(content=content, status_code=401)
+  
+
+
 
 # Endpoint used to view existing jobs in the database
 # Return a Json where the key is the roleId of each job and the values a dict corresponding to the requirements of the job

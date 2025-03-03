@@ -32,3 +32,6 @@ langchain-google-genai
 google-generativeai
 celery
 python-docx
+python-jose
+passlib
+bcrypt

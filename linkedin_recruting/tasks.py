@@ -59,13 +59,22 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
         logging.info("")
         logging.info("")
 
-        logging.info(f"Processing job  {count + 1} / {number_jobs}")
+        #logging.info(f"Processing job  {count + 1} / {number_jobs}")
+        logging.info(f"successfull process this stape {success} / {number_jobs}")
+        
+        logging.info(f"get basename of {job_pdf_path}")
 
         # Filename of job description
         filename = os.path.basename(job_pdf_path)
+        
+        logging.info(f"filename = {filename}")
+        
+        logging.info("enter try clause")
 
         try:
+            logging.info("call processSingleApplication")
             job, is_job_already_in_database = processSingleJob(job_pdf_path, mytask, llm)
+            logging.info(f"Job processed  {job.role} successfully")
             success += 1
             current_output_log = {"filename": filename, "status": "success", "description": "New"}
         except Exception as e:
@@ -173,6 +182,7 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
           filename = os.path.basename(msg_file_path)
 
           try:
+              logging.info("call processSingleApplication")
               application = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
 
               if application.roleId != None:

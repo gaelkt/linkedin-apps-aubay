@@ -11,6 +11,12 @@ import re
 import smtplib
 import logging
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOST=os.environ.get("HOST_BACKEND")
+
 
 
 
@@ -199,6 +205,56 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
     backupContent(recipient_email, content)
     
     
+
+def computeEmailAccount(recipient_email:str):
+
+
+    logging.info(f"Function computeEmailAccount recipient_email={recipient_email}")
+    
+    subject = f"Account Creation Confirmation"
+
+    logging.info(f"Subject of email={subject}")
+    
+    email_content_html = f"""
+    <html>
+    <head>
+    
+    <style>
+        body {{ font-family: Arial, sans-serif; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .button {{ display: inline-block; padding: 10px 20px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; }}
+    </style>
+        
+    </head>
+    <body>
+        <div class="container">
+        <p>Hello,</p>
+        <p>We are pleased to confirm that your account has been successfully created.</p>
+        <p>To activate your account, please click the following link:</p>
+        <p><a href="http://{HOST}:8081/active/?email={recipient_email}" class="button">Activate My Account</a></p>
+        <p>Thank you for your attention.</p>
+        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+    </div>
+    </body>
+    </html>
+      
+       """
+
+
+    # Check if the email is valid or not
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
+
+    deliverEmail(subject=subject, email_content_html=email_content_html, recipient_email=recipient_email)
+    
+    content = str({"message": "Successfully created account"})
+
+    backupContent(recipient_email, content)
+    
+    
+
+
 
 
 def computeEmailJob(recipient_email:str, jobs_received:int,
