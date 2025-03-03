@@ -243,6 +243,14 @@ def processSingleApplication(msg_file_path, task, llm):
         logging.info(f"Name = {application.name}")
         logging.info(f"Position = {application.role}")
 
+        # We check if the role has been registered in the database
+        if application.roleId == None:
+            logging.info("")
+            logging.info("")
+            logging.info(f"{application.role} has has not yet been registered in the database.")
+            logging.info("")
+            return application 
+
         # We check if the candidate is already in the database
         if application.isApplicationOld:
             logging.info("")

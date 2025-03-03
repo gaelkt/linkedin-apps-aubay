@@ -90,7 +90,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
                 logging.info("--------------------------------------------")
                 logging.info("Waiting for 30 seconds")
                 logging.info("--------------------------------------------")
-                time.sleep(25)
+                # time.sleep(25)
 
             output_log.append(current_output_log)
 
@@ -174,8 +174,13 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
 
           try:
               application = processSingleApplication(msg_file_path=msg_file_path, task=task, llm=llm)
-              success += 1
-              current_output_log = {"filename": filename, "status": "success", "description": "New"}
+
+              if application.roleId != None:
+                success += 1
+                current_output_log = {"filename": filename, "status": "success", "description": "New"}
+              else:
+                current_output_log = {"filename": filename, "status": "aborted", "description": f"{application.role} is not yet in the database yet. Please register it under the tab Process Jobs."}
+                failure += 1
             
           except Exception as e:
               failure += 1

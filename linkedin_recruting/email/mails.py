@@ -139,8 +139,18 @@ def sendEmail(recipient_email, selection, topN=5):
         """
 
         # Configuration du message
-        logging.info(f"Called Function To Configure Email")
-        send(recipient_email, subject, body)
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
 
     except Exception as e:
         raise Exception(f"Failed to send email: {str(e)}")
@@ -154,8 +164,25 @@ def sendEmailGeneral(recipient_email, message, subject):
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    send(recipient_email, subject, message)
- 
+    try:
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(message, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
+        raise Exception(e)
+    
 
 def computeEmailApplication(recipient_email:str, applications_received:int,
     applications_processed:int, application_success:int, output_log):
@@ -231,7 +258,27 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    send(recipient_email, subject, email_content_html)
+    try:
+    
+    # Edit this part to have an HTML email with a body
+        
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(email_content_html, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function computeEmailApplication. Error = {e}")
+        raise Exception(e)
     
     
 
@@ -309,8 +356,27 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    send(recipient_email, subject, email_content_html)
+    try:
     
+    # Edit this part to have an HTML email with a body
+        
+
+        msg = MIMEMultipart()
+        msg['From'] = "gaelkamdem@yahoo.fr"
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(email_content_html, 'html'))
+
+        # Connexion au serveur SMTP Yahoo
+        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+        server.starttls()
+        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        server.quit()
+
+    except Exception as e:
+        logging.info(f"Impossible to send email in function computeEmailJob. Error = {e}")
+        raise Exception(e)
     
     
 
@@ -329,3 +395,67 @@ def is_valid_email(email: str) -> bool:
     # This regex matches most common email patterns.
     pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     return re.match(pattern, email) is not None
+
+
+
+def deliverEmail(subject, email_content_html, recipient_email):
+
+    try:
+
+        msg = MIMEMultipart()
+        
+
+        # Connexion au serveur SMTP 
+        logging.info("")
+        if os.environ['PLATFORM'] != "windows":
+            logging.info(f"We are not on Windows")
+
+            # Email settings
+            msg['From'] = os.environ['APPLICATION_EMAIL']
+            msg['To'] = recipient_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(email_content_html, 'html'))
+
+            # Smtp server
+            server = smtplib.SMTP(os.environ['SMTP_SERVER'])
+            server.sendmail(os.environ['APPLICATION_EMAIL'], recipient_email, msg.as_string())  
+        else:
+            logging.info("We are on Windows ...")
+
+            # Email settings
+            msg['From'] = "gaelkamdem@yahoo.fr"
+            msg['To'] = recipient_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(email_content_html, 'html'))
+
+            # Smtp server
+            logging.info("Prapring smtp server ...")
+            server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
+            logging.info("smtp configured with smtp.mail.yahoo.com and port 587")
+            server.starttls()
+            logging.info("smtp started")
+            server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
+            logging.info("logging ok")
+            server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
+        
+        logging.info(f"Email sent to {recipient_email}")
+        server.quit()   
+        logging.info("Server quit")
+        
+    except Exception as e:
+        logging.info(f"Unable to send email to {recipient_email}")
+        logging.error(e)
+        
+
+    return 0
+
+
+
+def backupContent(recipient_email, content):
+
+    try:
+
+        deliverEmail(recipient_email, content, os.environ['BACKUP_RECIPIENT_EMAIL'])
+    except Exception as e:
+        logging.info(e)
+    return 0

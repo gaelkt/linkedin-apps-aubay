@@ -352,13 +352,14 @@ class Application:
 
             if roleId == None:
                 logging.info(f"Role {self.role} is not in the job database yet")
-                raise Exception(f"Role {self.role} is not in the job database yet")
+                self.isApplicationOld = False
+                return 
             else:
                 self.role = role
                 self.roleId = roleId
                 logging.info(f"role={self.role} roleId={self.roleId}")
 
-
+        logging.info("Processing other application data")
         # We generate a random ID for the application
         self.Id = generate_random_id()
 
