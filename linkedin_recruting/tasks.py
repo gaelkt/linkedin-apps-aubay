@@ -214,14 +214,13 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
                 # time.sleep(25)
                 logging.info("Moving next application")
 
-          output_log.append(current_output_log)
+          if current_output_log['status'] != "success":
+            output_log.append(current_output_log)
 
         # Saving task
       new_message = "Finish" + '\n ' +  task.message
       task.message = new_message + '\n ' +  task.message
       task.save(status="finish", message=new_message)
-
-
 
 
       logging.info(f"Number of applications received = {number_applications}")
@@ -240,8 +239,8 @@ def processMultipleApplications(saved_path_applications, recipient_email: str, l
         logging.info("")
         logging.info("Sending email is disabled")
         logging.info(f"os.environ['SEND_EMAIL']={os.environ['SEND_EMAIL']}")
-        logging.info("Voici les LOGS")
-        logging.info(f"output_log={output_log}")
+        # logging.info("Voici les LOGS")
+        # logging.info(f"output_log={output_log}")
       
     except Exception as e:
         logging.info("")

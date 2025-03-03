@@ -154,7 +154,7 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
             <li><strong>Number of applications processed:</strong> {applications_processed}</li>
             <li><strong>Number of applications processed successfully:</strong> {application_success}</li>
         </ul>
-        <p>Below is a summary of the processed applications:</p>
+        <p>Below is a summary of the applications that did not succeed:</p>
         <table>
            <thead>
               <tr>
@@ -179,7 +179,7 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
             </tbody>
             
         </table>
-        <p>Please review any failed applications and take the necessary actions.</p>
+        <p>Please review these applications and take the necessary actions.</p>
         <p>Thank you for your attention to this matter.</p>
         <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
     </body>
@@ -196,7 +196,7 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
     content = str({"task": "computeEmailApplication", "applications_received":applications_received,
     "applications_processed":applications_processed, "application_success":application_success, "output_log":output_log})
 
-    backupContent(recipient_email, content)
+    backupContent(recipient_email, email_content_html)
     
     
 
@@ -280,7 +280,7 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
     content = str({"task": "jobs_processed", "jobs_received":jobs_received,
     "jobs_processed":jobs_processed, "jobs_success":jobs_processed, "output_log":output_log})
 
-    backupContent(recipient_email, content)
+    backupContent(recipient_email, email_content_html)
     
 
 

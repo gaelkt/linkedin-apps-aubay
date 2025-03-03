@@ -81,13 +81,24 @@ if __name__ == "__main__":
         application = entry["application"]
         job = entry["job"]
         # print('-------APP--------------')
-        print(application)
+        # print(application)
         # print('-------JOB--------------')
-        print(job)
+        # print(job)
         
         
         candidate_hard_skills = application['hard_skills']
         required_hard_skills = job['hard_skills']
+        
+        Nrequired = len(required_hard_skills)
+        Nqualifications = len(candidate_hard_skills)
+        
+        C = [x for x in candidate_hard_skills if x in required_hard_skills]
+        
+        print(len(C))
+
+
+        
+        
         
         skill0 = candidate_hard_skills[0]
         count += 1
