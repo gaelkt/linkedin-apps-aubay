@@ -32,7 +32,7 @@ class User:
         self.email = email
         self.password = password
         self.date = date.today()
-        self.isActive = True
+        self.isActive = False
         self.message = "User created"
         self.save()
         

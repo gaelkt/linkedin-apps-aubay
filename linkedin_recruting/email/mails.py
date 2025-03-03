@@ -10,49 +10,12 @@ from email.mime.text import MIMEText
 import re
 import smtplib
 import logging
+
 from dotenv import load_dotenv
+
 load_dotenv()
 
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = os.getenv("SMTP_PORT")
-SMTP_EMAIL_SENDER = os.getenv("SMTP_EMAIL_SENDER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-SMTP_HOST = os.getenv("SMTP_HOST")
-
-
-def send(email, subject, body):
-    try:
-        # Configuration du message
-        logging.info(f"Configure Email For {email}")
-        
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_EMAIL_SENDER
-        msg['To'] = email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
-        
-        logging.info(f"Sending Email To {email}")
-        
-        
-        if SMTP_HOST == "Dedicated":
-            logging.info(f"Sending Email To {email} Using Dedicated SMTP Server")
-            # Connexion au serveur SMTP DEDIE
-            server = smtplib.SMTP(SMTP_SERVER)
-            server.sendmail(SMTP_EMAIL_SENDER, email, msg.as_string())
-            server.quit()
-        else:
-            # Connexion a un service SMTP classique
-            logging.info(f"Sending Email To {email} Using  {SMTP_HOST} Server")
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-            server.starttls()
-            server.login(SMTP_EMAIL_SENDER, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL_SENDER, email, msg.as_string())
-            server.quit()
-
-       
-
-    except Exception as e:
-        raise Exception(f"Failed to send email: {str(e)}")
+HOST=os.environ.get("HOST_BACKEND")
 
 
 
@@ -62,9 +25,6 @@ def sendEmail(recipient_email, selection, topN=5):
 
 
         # Création du contenu de l'email
-        
-        logging.info(f"Formating Email Body")
-        
         subject = f"Job board summary"
         body = """
         <html>
@@ -138,19 +98,9 @@ def sendEmail(recipient_email, selection, topN=5):
         </html>
         """
 
-        # Configuration du message
-        msg = MIMEMultipart()
-        msg['From'] = "gaelkamdem@yahoo.fr"
-        msg['To'] = recipient_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
 
-        # Connexion au serveur SMTP Yahoo
-        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
-        server.starttls()
-        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
-        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
-        server.quit()
+        deliverEmail(subject=subject, email_content_html=body, recipient_email=recipient_email)
+
 
     except Exception as e:
         raise Exception(f"Failed to send email: {str(e)}")
@@ -164,24 +114,13 @@ def sendEmailGeneral(recipient_email, message, subject):
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    try:
 
-        msg = MIMEMultipart()
-        msg['From'] = "gaelkamdem@yahoo.fr"
-        msg['To'] = recipient_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(message, 'html'))
+    deliverEmail(subject=subject, email_content_html=message, recipient_email=recipient_email)
 
-        # Connexion au serveur SMTP Yahoo
-        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
-        server.starttls()
-        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
-        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
-        server.quit()
+    backupContent(recipient_email, message)
 
-    except Exception as e:
-        logging.info(f"Impossible to send email in function sendEmailGeneral. Error = {e}")
-        raise Exception(e)
+    
+    return 0
     
 
 def computeEmailApplication(recipient_email:str, applications_received:int,
@@ -258,29 +197,64 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    try:
+    deliverEmail(subject=subject, email_content_html=email_content_html, recipient_email=recipient_email)
     
-    # Edit this part to have an HTML email with a body
+    content = str({"task": "computeEmailApplication", "applications_received":applications_received,
+    "applications_processed":applications_processed, "application_success":application_success, "output_log":output_log})
+
+    backupContent(recipient_email, content)
+    
+    
+
+def computeEmailAccount(recipient_email:str):
+
+
+    logging.info(f"Function computeEmailAccount recipient_email={recipient_email}")
+    
+    subject = f"Account Creation Confirmation"
+
+    logging.info(f"Subject of email={subject}")
+    
+    email_content_html = f"""
+    <html>
+    <head>
+    
+    <style>
+        body {{ font-family: Arial, sans-serif; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .button {{ display: inline-block; padding: 10px 20px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; }}
+    </style>
         
+    </head>
+    <body>
+        <div class="container">
+        <p>Hello,</p>
+        <p>We are pleased to confirm that your account has been successfully created.</p>
+        <p>To activate your account, please click the following link:</p>
+        <p><a href="http://{HOST}:8081/active/?email={recipient_email}" class="button">Activate My Account</a></p>
+        <p>Thank you for your attention.</p>
+        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+    </div>
+    </body>
+    </html>
+      
+       """
 
-        msg = MIMEMultipart()
-        msg['From'] = "gaelkamdem@yahoo.fr"
-        msg['To'] = recipient_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(email_content_html, 'html'))
 
-        # Connexion au serveur SMTP Yahoo
-        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
-        server.starttls()
-        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
-        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
-        server.quit()
+    # Check if the email is valid or not
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    except Exception as e:
-        logging.info(f"Impossible to send email in function computeEmailApplication. Error = {e}")
-        raise Exception(e)
+    deliverEmail(subject=subject, email_content_html=email_content_html, recipient_email=recipient_email)
+    
+    content = str({"message": "Successfully created account"})
+
+    backupContent(recipient_email, content)
     
     
+
+
 
 
 def computeEmailJob(recipient_email:str, jobs_received:int,
@@ -356,27 +330,18 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
         logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
         raise Exception(f"Recipient email {recipient_email} is invalid")
 
-    try:
+    deliverEmail(subject=subject, email_content_html=email_content_html, recipient_email=recipient_email)
+
+
+    content = str({"task": "jobs_processed", "jobs_received":jobs_received,
+    "jobs_processed":jobs_processed, "jobs_success":jobs_processed, "output_log":output_log})
+
+    backupContent(recipient_email, content)
     
-    # Edit this part to have an HTML email with a body
+
+
+    return 0
         
-
-        msg = MIMEMultipart()
-        msg['From'] = "gaelkamdem@yahoo.fr"
-        msg['To'] = recipient_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(email_content_html, 'html'))
-
-        # Connexion au serveur SMTP Yahoo
-        server = smtplib.SMTP('smtp.mail.yahoo.com', 587)
-        server.starttls()
-        server.login('gaelkamdem@yahoo.fr', 'nzszqfqetawnqkch')
-        server.sendmail('gaelkamdem@yahoo.fr', recipient_email, msg.as_string())
-        server.quit()
-
-    except Exception as e:
-        logging.info(f"Impossible to send email in function computeEmailJob. Error = {e}")
-        raise Exception(e)
     
     
 

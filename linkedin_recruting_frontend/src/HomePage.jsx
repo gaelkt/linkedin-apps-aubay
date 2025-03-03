@@ -278,8 +278,9 @@ const HomePage = () => {
   
   
     return (
-  
-  
+
+      <div >
+
       <div className="container mt-3">
         <ul className="nav nav-tabs mb-4 fixed-header" style={{ borderBottom: '2px solid red', marginTop: '5px' }}>
            
@@ -357,7 +358,7 @@ const HomePage = () => {
         </ul>
   
   
-        <div className="tab-content content">
+        <div className="tab-content content" >
           {activeTab === 'settings' && (
             <div>
               <h3></h3>
@@ -611,6 +612,10 @@ const HomePage = () => {
   
       
       </div>
+
+      </div>
+
+     
   
     );
 

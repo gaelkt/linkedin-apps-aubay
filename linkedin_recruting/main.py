@@ -29,8 +29,8 @@ from request import UserRequest
 #from chunks import processMultipleApplications
 from tasks import processMultipleApplications, processMultipleJobs
 #from tasks import process_jobs_task, process_multiple_applications_task
-from mysql_functions import refreshDB, getJobs, refreshDBLite,getCredentials
-from mails import sendEmailGeneral,sendEmail
+from mysql_functions import refreshDB, getJobs, refreshDBLite,getCredentials,checkEmail,setIsActiveUser
+from mails import sendEmailGeneral,sendEmail,computeEmailAccount
 from libs import selectApplication, Task, setLLM,TaskCelery,User
 from datetime import datetime
 from helper import generate_random_id
@@ -133,10 +133,13 @@ def login(user: str, password: str):
     
     username=getCredentials(user, password)
     if username:
+        if username=="User is not active":
+            content = {"message": f"User {user} not Authorized"}
+            return JSONResponse(content=content, status_code=401)
         content = {"message": username}
         return JSONResponse(content=content, status_code=200)
     else:
-        content = {"message": f"User is not authenticated "}
+        content = {"message": f"Login or Password Incorrect"}
         return JSONResponse(content=content, status_code=401)
     
 
@@ -144,8 +147,25 @@ def login(user: str, password: str):
 @app.post("/register/")
 def create_user(user: UserRequest):
     user=User(user.username, user.email, user.password)
+    computeEmailAccount(user.email)
     content={"message": f"User {user.username} is created"}
     return JSONResponse(content=content, status_code=200)
+
+# Endpoint used to activate  user
+@app.get("/active/")
+def activeUser(email:str):
+    check=checkEmail(email)
+    if check:
+        logging.info(f"User we  {email} exists on database")
+        setIsActiveUser(email)
+        content={"message": f"User {email} is active"}
+        return JSONResponse(content=content, status_code=200)
+    else:
+        content={"message": f"User {email} is not active"}
+        return JSONResponse(content=content, status_code=401)
+  
+
+
 
 # Endpoint used to view existing jobs in the database
 # Return a Json where the key is the roleId of each job and the values a dict corresponding to the requirements of the job

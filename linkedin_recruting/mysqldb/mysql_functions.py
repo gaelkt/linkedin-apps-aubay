@@ -347,7 +347,7 @@ def createUsersTable(table_users):
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 date DATE,
-                isActive BOOLEAN DEFAULT TRUE,
+                isActive BOOLEAN DEFAULT False,
                 message VARCHAR(255) NOT NULL
              
             )
@@ -368,6 +368,63 @@ def createUsersTable(table_users):
             cursor.close()
             connection.close()
 
+
+def setIsActiveUser(email:str):
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(host=host,port=port, user=user, password=password, database=database_name)
+        cursor = connection.cursor()
+
+        # Define the query
+        query = f"""
+        UPDATE  {table_users}
+        SET isActive = TRUE,message="User Actived"
+        WHERE email = %s
+        LIMIT 1;
+        """
+        
+        cursor.execute(query, (email,))
+        
+        connection.commit() 
+
+        cursor.close()
+        connection.close()
+        
+        return 0
+
+    except Error as e:
+        logging.error(f"Error in the function setIsActiveUser: {e}")
+        raise Exception(e)
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+        
+
+def checkEmail(email:str):
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(host=host,port=port, user=user, password=password, database=database_name)
+        cursor = connection.cursor()
+        # Define the query
+        query = "SELECT 1 FROM users WHERE email = %s LIMIT 1;"
+
+        cursor.execute(query, (email,))
+        result = cursor.fetchone()
+
+        if result is not None:
+            return True
+        else:
+            return False
+        
+    except Error as e:
+        logging.error(f"Error in the function checkEmail: {e}")
+        raise Exception(e)
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+        
 
 def getUserId(Id):
     try:
@@ -494,7 +551,7 @@ def getCredentials(email, password_user):
         logging.info(f"Hashed password: {hash}")
 
         # Query to get Role for a specific RoleID
-        query = f"SELECT password,username FROM {table_users} WHERE email  = %s"
+        query = f"SELECT isActive,password,username FROM {table_users} WHERE email  = %s"
         cursor.execute(query, (email,))
        
 
@@ -503,11 +560,14 @@ def getCredentials(email, password_user):
 
         
         if result:
-            logging.info(f"User {result[0]} found")
+            logging.info(f"User {result[1]} found")
+            if result[0] == 0:
+                logging.info(f"User is not active")
+                return "User is not active"
             logging.info(f"Verify password")
-            if verify_password(password_user,result[0]):
+            if verify_password(password_user,result[1]):
                 logging.info(f"Password verified")
-                return result[1]
+                return result[2]
             else:
                 logging.info(f"Password not verified")
                 return None
