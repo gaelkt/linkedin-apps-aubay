@@ -15,12 +15,12 @@ def generate_random_id():
 
 def generate_date_today():
     
-    today = datetime.date.today()
+    today = datetime.now()
 
     # Format the date as "YYYY-MM-DD"
     formatted_date = today.strftime("%Y-%m-%d")
 
-    return date
+    return formatted_date
 def generate_random_date(start_date="2024-08-01", end_date="2024-11-08"):
     # Convert the start and end dates to datetime objects if they are in string format
     if isinstance(start_date, str):

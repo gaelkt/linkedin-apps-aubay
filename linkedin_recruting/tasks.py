@@ -22,6 +22,13 @@ load_dotenv()
 
 @app.task
 def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
+    date=datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    logging.info(f"Date = {date}")
+    logging.info(f"Recipient email = {recipient_email}")
+    logging.info(f"LLM type = {llm_type}")
+    logging.info(f"Number of jobs = {len(saved_path_jobs)}")
+    logging.info("-----------------------------------------------")
+  
     
     try:
         
@@ -63,19 +70,30 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
 
         # Filename of job description
         filename = os.path.basename(job_pdf_path)
+        
+        logging.info(f"Filename = {filename}")
+        logging.info("next step try block")
+        
+        
 
         try:
+            logging.info("Processing job description")
+            logging.info("in try block")
+            logging.info("calling processSingleJob")
             job, is_job_already_in_database = processSingleJob(job_pdf_path, mytask, llm)
             success += 1
+            logging.info(f"=======================> job processed !")
             current_output_log = {"filename": filename, "status": "success", "description": "New"}
         except Exception as e:
+            logging.error("in except block")
+            logging.error(e)
             failure += 1
             current_output_log = {"filename": filename, "status": "failed", "description": e}
             continue
 
         finally:
             count += 1
-            output_log.append(current_output_log)
+            
 
             # We have an old job that has not been processed with LLM
             if is_job_already_in_database:
@@ -93,6 +111,7 @@ def processMultipleJobs(saved_path_jobs, recipient_email, llm_type):
                 # time.sleep(25)
 
             output_log.append(current_output_log)
+            logging.info(f"=======================> job next Job !")
 
                 
       logging.info("")

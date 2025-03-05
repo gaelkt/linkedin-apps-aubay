@@ -1,15 +1,22 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../mysqldb'))
 from libs import Application
 
-
+from mysql_functions import getUserInfo
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
 import smtplib
 import logging
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOST=os.environ.get("HOST_BACKEND")
 
 
 
@@ -19,6 +26,7 @@ def sendEmail(recipient_email, selection, topN=5):
 
 
         # Création du contenu de l'email
+        fistname= getUserInfo(recipient_email)
         subject = f"Job board summary"
         body = """
         <html>
@@ -41,7 +49,7 @@ def sendEmail(recipient_email, selection, topN=5):
         <body>
         """
         body+=f"""
-        Bonjour, <br/>
+        Bonjour {fistname}, <br/>
         Veuillez trouver ci-dessous la liste des candidats ayant postulé chez Aubay.
         """
 
@@ -127,6 +135,8 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
 
     logging.info(f"Subject of email={subject}")
     
+    firstname = getUserInfo(recipient_email)
+    
     email_content_html = f"""
     <html>
     <head>
@@ -145,8 +155,8 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
         </style>
     </head>
     <body>
-        <p><strong>Subject:</strong> Automated Job Application Processing Report</p>
-        <p>Dear HR Team,</p>
+        
+        <p>Dear {firstname},</p>
         <p>I hope this message finds you well.</p>
         <p>Please find below an automated report for today’s job application processing:</p>
         <ul>
@@ -198,7 +208,58 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
 
     backupContent(recipient_email, content)
     
+ 
+
+def computeEmailAccount(recipient_email:str):
+
+
+    logging.info(f"Function computeEmailAccount recipient_email={recipient_email}")
     
+    subject = f"Account Creation Confirmation"
+
+    logging.info(f"Subject of email={subject}")
+    
+    firstname = getUserInfo(recipient_email)
+    
+    email_content_html = f"""
+    <html>
+    <head>
+    
+    <style>
+        body {{ font-family: Arial, sans-serif; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .button {{ display: inline-block; padding: 10px 20px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; }}
+    </style>
+        
+    </head>
+    <body>
+        <div class="container">
+        <p>Hi {firstname},</p>
+        <p>We are pleased to confirm that your account has been successfully created.</p>
+        <p>To activate your account, please click the following link:</p>
+        <p><a href="http://{HOST}:8081/active/?email={recipient_email}" class="button">Activate My Account</a></p>
+        <p>Thank you for your attention.</p>
+        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+    </div>
+    </body>
+    </html>
+      
+       """
+
+
+    # Check if the email is valid or not
+    if not is_valid_email(recipient_email):
+        logging.error(f"Recipient email {recipient_email} is invalid in function sendEmailGeneral in file mails.py")
+        raise Exception(f"Recipient email {recipient_email} is invalid")
+
+    deliverEmail(subject=subject, email_content_html=email_content_html, recipient_email=recipient_email)
+    
+    content = str({"message": "Successfully created account"})
+
+    backupContent(recipient_email, content)
+    
+    
+   
 
 
 def computeEmailJob(recipient_email:str, jobs_received:int,
@@ -210,6 +271,7 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
     subject = f"Automated report for the processing of {jobs_received} job desc(s)"
 
     logging.info(f"Subject of email={subject}")
+    firstname = getUserInfo(recipient_email)
     
     email_content_html = f"""
     <html>
@@ -229,7 +291,7 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
         </style>
     </head>
     <body>
-        <p>Dear HR Team,</p>
+        <p>Dear {firstname},</p>
         <p>I hope this message finds you well.</p>
         <p>Please find below an automated report for today’s job desc processing:</p>
         <ul>
