@@ -6,6 +6,7 @@ const JobComponent=({refresh}) =>  {
     const [jobs, setJobs] = useState([]);
     const [rolesList, setRolesList] = useState([]);
     const [role, setRole] = useState('');
+    const [roles, setRoles] = useState([]);
 
   useEffect(() => {
     const fetchRoles = async () => {

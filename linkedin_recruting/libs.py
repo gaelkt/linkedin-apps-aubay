@@ -4,7 +4,7 @@ from helper import generate_random_id, generate_random_date, convert_to_date
 from pathlib import Path
 import extract_msg
 from helper import extract_applicant_name_from_subjet, extract_role_name_from_subject
-from mysql_functions import check_application_exists, generate_engine, getRoleId, getJobData
+from mysql_functions import check_application_exists, generate_engine, getRoleId, getJobData,getUserId
 from docx2pdf import convert
 import numpy as np
 from mysql_functions import getApplication
@@ -12,10 +12,63 @@ from sqlalchemy import text
 from sqlalchemy import create_engine, Table, MetaData, update
 import re
 
+from passlib.context import CryptContext
+from datetime import date
+
 from dotenv import load_dotenv
 load_dotenv()
 
 resume_folder = os.environ['RESUME_FOLDER']
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+
+class User:
+    def __init__(self, firstname ,lastname,email, password):
+        self.Id = generate_random_id()
+        self.firstname = firstname
+        self.lastname = lastname
+        self.email = email
+        self.password = password
+        self.date = date.today()
+        self.isActive = False
+        self.message = "User created"
+        self.save()
+        
+    def save(self):
+        exist=True
+        while exist:
+            exist=getUserId(self.Id)
+            if exist:
+                self.Id = generate_random_id()
+        engine = generate_engine()
+        table_users = os.environ['DB_TABLE_USERS']
+        insert_query = f"""
+        INSERT INTO {table_users} (Id, firstname,lastname, email, password, date, isActive, message)
+        VALUES (:Id, :firstname, :lastname,:email, :password, :date, :isActive, :message);
+        """
+         # Define the values to insert
+        values = {
+        "Id": self.Id,
+        "firstname": self.firstname,
+        "lastname": self.lastname,
+        "email": self.email,
+        "password": hash_password(self.password),
+        "date": self.date,
+        "isActive": self.isActive,
+        "message": self.message
+            }
+        with engine.connect() as connection:
+            with connection.begin():
+                connection.execute(text(insert_query), values)
+                logging.info(f"...............=>Saved user {self.Id} to database")
+        logging.info("Insertion ok")
+        
+    
 
 
 class TaskCelery:
@@ -228,6 +281,12 @@ class Job:
         self.langues = job_data["langues"]
 
         return self.role
+    def info(self):
+        logging.info(f"Job {self.role} loaded from database")
+        desc=f"Job Desciprion: {self.role} \n"
+        desc+=f"Experience: {self.experience} \n"
+        desc+=f"Diplome: {self.diplome} \n"
+        return desc
 
 
 class Application:

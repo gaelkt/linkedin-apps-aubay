@@ -64,7 +64,11 @@ def extract_text_from_pdf(pdf_path):
 
 
 def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
-
+    
+    logging.info(f" into function processSingleJob with job_pdf_path={job_pdf_path} and task={task}")
+    
+    
+    logging.info(f" start processing {job_pdf_path}")   
     if job_pdf_path == None:
         logging.info("Invalid input file. The can't be None")
         raise Exception("Invalid input file. The can't be None")
@@ -72,9 +76,13 @@ def processSingleJob(job_pdf_path: str, task: str, llm) -> Job:
     elif not os.path.exists(job_pdf_path):
         logging.info(f"Invalid path. Can not find {job_pdf_path}")
         raise Exception(f"Invalid path. Can not find {job_pdf_path}")  
+    
+    logging.info(f"create object job with path {job_pdf_path}")
 
     job = Job(job_pdf_path=job_pdf_path, date=generate_date_today(), taskId=task.Id)
-
+    
+    logging.info(f"Job description = {job.info()}")
+    
     logging.info(f"Job initalized with task = {job.taskId}")
 
 
