@@ -198,7 +198,10 @@ def viewApplications(begin_date, end_date, roles: list[str] = Query([])):
 
     return JSONResponse(content=output, status_code=200)
 
-
+# This endpoint process multiple job descs sent as PDF files from a POST request
+# The result is stored in the database
+# Processing is done asynchronously 
+# A Jsonresponse is sent as acknowledge of the request while the process is running
 @app.post("/jobs/")
 def multipleJobs(files: List[UploadFile] = File(...), 
                        recipient_email: str = "gkamdemdeteyou@aubay.com",
@@ -242,9 +245,10 @@ def multipleJobs(files: List[UploadFile] = File(...),
     return JSONResponse(content={"message": f"Processing {len(saved_path_jobs)} job desc(s). ID task: {celery_task_id}."}, status_code=200)
     
 
-
-# Endpoint used to process multiple applications and store their qualifications in the database
-# Applications files are sent via a POST request
+# This endpoint process multiple applications as .msg files from a POST request
+# The result is stored in the database
+# Processing is done asynchronously 
+# A Jsonresponse is sent as acknowledge of the request while the process is running
 @app.post("/applications/")
 async def multipleApplications(files: List[UploadFile] = File(...), 
         recipient_email: str = "gkamdemdeteyou@aubay.com",
@@ -283,7 +287,7 @@ async def multipleApplications(files: List[UploadFile] = File(...),
     return JSONResponse(content={"message": f"Processing {len(saved_path_applications)} application(s)"}, status_code=200)
 
 
-
+# Endpoint used to send a report
 @app.get("/report/")
 def sendReport(recipient_email, begin_date, end_date, roles: list[str] = Query([])):
 

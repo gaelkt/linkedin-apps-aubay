@@ -426,7 +426,8 @@ def backupContent(recipient_email, content):
 
     try:
 
-        deliverEmail(recipient_email, content, os.environ['BACKUP_RECIPIENT_EMAIL'])
+        # deliverEmail(recipient_email, content, os.environ['BACKUP_RECIPIENT_EMAIL'])
+        A = 2+1
     except Exception as e:
         logging.info(e)
     return 0
