@@ -2,30 +2,38 @@ version: "3.8"
 
 services:
   backend:
-    image: aubay-backend
-    container_name: linkedin-backend
+    image: backend
+    container_name: backend
+    restart: unless-stopped
     ports:
-      - "8081:8081"
-      - "3306:3306"
-      - "5672:5672"
-      - "15672:15672"
-      
-    # Le volume permet de conserver les données MySQL même si le conteneur est recréé.
+      - "8081:8081"    
+      - "3306:3306"    
+      - "5672:5672"    
+      - "15672:15672"  
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - linkedin_network
+      - bright_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   frontend:
-    image: aubay-frontend
-    container_name: linkedin-frontend
+    image: frontend
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     ports:
-      - "80:80"
+      - "8082:80"      
     networks:
-      - linkedin_network
+      - bright_network
 
 volumes:
   mysql_data:
 
 networks:
-  linkedin_network:
+  bright_network:

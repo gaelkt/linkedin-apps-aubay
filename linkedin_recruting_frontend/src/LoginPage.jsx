@@ -34,7 +34,7 @@ const LoginPage = () => {
   return (
     <Box
       sx={{
-        backgroundImage: 'url(/aubay.jpg)',
+        backgroundImage: 'url(/back_image.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -79,11 +79,11 @@ const LoginPage = () => {
             fullWidth
             onClick={handleLogin}
             sx={{
-              background: 'linear-gradient(45deg, #FF0000 30%, #FF6347 90%)',
+              background: 'linear-gradient(45deg, #FDD835  30%, #00BCD4 90%)',
               color: 'white',
               fontWeight: 'bold',
               '&:hover': {
-                background: 'linear-gradient(45deg, #D50000 30%, #FF4500 90%)',
+                background: 'linear-gradient(45deg, #FBC02D 30%, #0097A7  90%)',
               }
             }}
           >
