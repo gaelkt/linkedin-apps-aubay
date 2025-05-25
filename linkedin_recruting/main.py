@@ -113,6 +113,12 @@ logging.info("initialize user for default db...")
 
 refreshDBLite()
 
+# Endpoint Health
+
+@app.get("/health")
+async def health():
+    return JSONResponse({"status": "ok"}, status_code=200)
+
 
 # Endpoint used to setup the database and all tables
 @app.get("/initialization/")

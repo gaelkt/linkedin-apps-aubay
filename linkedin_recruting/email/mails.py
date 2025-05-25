@@ -233,7 +233,7 @@ def computeEmailAccount(recipient_email:str):
         <p>To activate your account, please click the following link:</p>
         <p><a href="http://{HOST}:8081/active/?email={recipient_email}" class="button">Activate My Account</a></p>
         <p>Thank you for your attention.</p>
-        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+        <p>Best regards,<br>Bright AI Assistant</p>
     </div>
     </body>
     </html>

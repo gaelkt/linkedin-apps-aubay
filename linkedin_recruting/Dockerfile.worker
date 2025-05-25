@@ -1,0 +1,9 @@
+FROM base:latest
+
+COPY . .
+
+
+CMD ["sh", "-c", "\
+    wait-for rabbitmq:5672 -- \
+    celery -A celery_app:celery_app worker --loglevel=info -Q aubay \
+"]

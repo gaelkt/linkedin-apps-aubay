@@ -1,0 +1,7 @@
+FROM base:latest   
+COPY . .
+EXPOSE 8081
+CMD ["sh", "-c", "\
+    wait-for db:3306 -- wait-for rabbitmq:5672 -- \
+    uvicorn main:app --host 0.0.0.0 --port 8081 \
+"]
