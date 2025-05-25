@@ -48,7 +48,7 @@ def sendEmail(recipient_email, selection, topN=5):
         """
         body+=f"""
         Bonjour, <br/>
-        Veuillez trouver ci-dessous la liste des candidats ayant postulé chez Aubay.
+        Veuillez trouver ci-dessous la liste des candidats ayant postulé .
         """
 
         # Génération des tableaux pour chaque IDJob
@@ -93,7 +93,7 @@ def sendEmail(recipient_email, selection, topN=5):
 
         body += """
         Cordialement,
-        L'assistant AI
+        Bright-Talent
         </body>
         </html>
         """
@@ -187,7 +187,7 @@ def computeEmailApplication(recipient_email:str, applications_received:int,
         </table>
         <p>Please review any failed applications and take the necessary actions.</p>
         <p>Thank you for your attention to this matter.</p>
-        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+        <p>Best regards,<br>Bright-Talent AI Recruiter Assistant</p>
     </body>
     </html>
     """
@@ -233,7 +233,7 @@ def computeEmailAccount(recipient_email:str):
         <p>To activate your account, please click the following link:</p>
         <p><a href="http://{HOST}:8081/active/?email={recipient_email}" class="button">Activate My Account</a></p>
         <p>Thank you for your attention.</p>
-        <p>Best regards,<br>Bright AI Assistant</p>
+        <p>Best regards,<br>Bright-Talent AI Recruiter Assistant</p>
     </div>
     </body>
     </html>
@@ -320,7 +320,7 @@ def computeEmailJob(recipient_email:str, jobs_received:int,
         </table>
         <p>Please review any failed job descs and take the necessary actions.</p>
         <p>Thank you for your attention to this matter.</p>
-        <p>Best regards,<br>Aubay AI Recruiter Assistant</p>
+        <p>Best regards,<br>Bright-Talent AI Recruiter Assistant</p>
     </body>
     </html>
     """
